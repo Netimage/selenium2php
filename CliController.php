@@ -266,7 +266,7 @@ class CliController {
             $testName= str_replace($destPath, '', $absPath);
         }
         
-        $testName = ucfirst(preg_replace("/\..+$/", '', $testName));
+        $testName = preg_replace('/[^A-Za-z0-9]/', '_', ucwords($testName));
         return $testName;
     }
     

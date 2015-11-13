@@ -300,6 +300,22 @@ class Commands2{
         return "{$this->_obj}->assertFalse($expression);";
     }
 
+	/**
+     * 
+     * @param string $expression
+     * @return string
+     */
+	public function storeValue($target, $value) {
+		$lines = array();
+        $lines[] = "{$this->_obj}->storeValue(\"$target\", \"$value\");";
+		return $lines;
+	}
+	
+	public function store($target, $value) {
+		$lines = array();
+        $lines[] = "{$this->_obj}->store(\"$target\", \"$value\");";
+		return $lines;
+	}
     /**
      * 
      * @param string $expression

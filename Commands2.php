@@ -238,8 +238,8 @@ class Commands2{
         $lines[] = "        if (\$element->displayed()) {";
         $lines[] = "            return true;";
         $lines[] = "        }";
-        $lines[] = '    } catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {}';
-        $lines[] = '}, 8000);';
+        $lines[] = '    } catch (Exception $e) {}';
+        $lines[] = '}, 30000);';
         return $lines;
     }
     
@@ -254,7 +254,7 @@ class Commands2{
         $lines[] = "            return true;";
         $lines[] = "        }";
         $lines[] = '    }';
-        $lines[] = '}, 8000);';
+        $lines[] = '}, 30000);';
         return $lines;
     }
 
@@ -311,9 +311,20 @@ class Commands2{
 		return $lines;
 	}
 	
+	/**
+     * 
+     * @param string $expression
+     * @return string
+     */
+	public function storeXpathCount($target, $value) {
+		$lines = array();
+        $lines[] = "{$this->_obj}->storeXpathCount(\"$target\", \"$value\");";
+		return $lines;
+	}
+	
 	public function store($target, $value) {
 		$lines = array();
-        $lines[] = "{$this->_obj}->store(\"$target\", \"$value\");";
+        $lines[] = "{$this->_obj}->store(\"$value\", \"$target\");";
 		return $lines;
 	}
     /**

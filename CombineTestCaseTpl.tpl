@@ -23,7 +23,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2TestCase {
 			$this->setBrowserUrl("{$testUrl}");
 			self::$first = true;
 		}
-		parent::setUp();
+		parent::setUp(false);
     }
 
     public function {$testMethodName}() {

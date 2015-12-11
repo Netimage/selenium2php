@@ -146,6 +146,15 @@ class Commands2 {
 		// By XPath (wait for element)
 		return "{$this->_obj}->byXPath(\"{$selector}\", true)";
 	}
+	
+	/**
+	 * byLinkText
+	 * @param string $selector
+	 */
+	public function byLinkText($selector) {
+		// By LinkText (wait for element)
+		return "{$this->_obj}->byLinkText(\"{$selector}\", true)";
+	}
 
 	public function click($selector) {
 		$lines = array();

@@ -26,7 +26,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2TestCase {
 		parent::setUp();
 	}
 	
-	protected function testFailed () {
+	protected function failedTest () {
 		// No extra action -> just continue
 	}
 	

@@ -280,7 +280,7 @@ class Commands2 {
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$element = $localExpression;";
-		$lines[] = "        if (\$element->displayed()) {";
+		$lines[] = "        if (\$element && \$element->displayed()) {";
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';
@@ -475,7 +475,7 @@ class Commands2 {
 	 */
 	public function storeAttribute($target, $varName) {
 		$this->_checkVarName($varName);
-		$line = "\$$varName = " . $this->_getAttributeByLocator($target) . ';';
+		$line = "{$this->_obj}->store(\"$varName\", " .  $this->_getAttributeByLocator($target) . ");";
 		return $line;
 	}
 

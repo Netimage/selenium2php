@@ -113,13 +113,35 @@ class Converter {
 	}
 
 	/**
+	 * Parses HTML from a suite file
+	 * @param string $htmlStr
+	 */
+	protected function _parseSuiteHtml($htmlStr, $suitePath) {
+		$xml = simplexml_load_string($htmlStr);
+
+		$results = [];
+		$links = $xml->body->table->tbody; /* @var $links \SimpleXMLElement */
+		foreach ($links->children() as $link) {
+			/* @var $link \SimpleXMLElement */
+			if ($link->td->a) {
+				$linkAttributes = $link->td->a->attributes();
+				$href = (string) $linkAttributes['href'];
+				$fileName = $suitePath . DIRECTORY_SEPARATOR . $href;
+				$results[] = $this->convert(file_get_contents($fileName), '', '', true);
+			}
+		}
+		return $results;
+	}
+
+	/**
 	 * Converts HTML text of Selenium test case into PHP code
 	 * 
 	 * @param string $htmlStr content of html file with Selenium test case
 	 * @param string $testName test class name (leave blank for auto)
+	 * @param boolean $functionOnly
 	 * @return string PHP test case file content
 	 */
-	public function convert($htmlStr, $testName = '', $tplFile = '') {
+	public function convert($htmlStr, $testName = '', $tplFile = '', $functionOnly = false) {
 		$this->_testName = $testName;
 		$this->_commands = array();
 		$this->_parseHtml($htmlStr);
@@ -131,9 +153,27 @@ class Converter {
 				exit;
 			}
 		} else {
-			$lines = $this->_composeLines();
-			return $this->_composeStr($lines);
+			$lines = $this->_composeLines($functionOnly);
+			return $this->_composeStrWithIndents($lines, 4);
 		}
+	}
+
+	public function convertSuite($htmlStr, $testName = '', $tplFile = '', $suitePath = '') {
+		$testContent = $this->_parseSuiteHtml($htmlStr, $suitePath);
+		$testStringContent = implode("\n\n", $testContent);
+		if ($tplFile) {
+			if (is_file($tplFile)) {
+				$this->_testName = $testName;
+				$content = $this->_convertToTpl($tplFile, $testStringContent);
+			} else {
+				echo "Template file $tplFile is not accessible.";
+				exit;
+			}
+		} else {
+			$content = $this->_composeStr($this->_composeLines(false, $testStringContent));
+		}
+		
+		return $content;
 	}
 
 	/**
@@ -162,13 +202,13 @@ class Converter {
 		}
 		$methodContent = $this->_composeStr($lines);
 		// Match variables
-		$re = '/(\\${[a-zA-Z_]*\\})/'; 
+		$re = '/(\\${[a-zA-Z_]*\\})/';
 		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
 		preg_match_all($re, $methodContent, $matches);
-		if(count($matches) > 0) {
+		if (count($matches) > 0) {
 			$search = $replace = [];
 			$matchList = reset($matches);
-			foreach($matchList as $match) {
+			foreach ($matchList as $match) {
 				$search[] = $match;
 				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
 			}
@@ -180,9 +220,10 @@ class Converter {
 	 * Uses tpl file for output result.
 	 * 
 	 * @param string $tplFile filepath
+	 * @param string $testMethodContent
 	 * @return string output content
 	 */
-	protected function _convertToTpl($tplFile) {
+	protected function _convertToTpl($tplFile, $testMethodContent = null) {
 		$tpl = file_get_contents($tplFile);
 		$replacements = array(
 			'{$comment}' => $this->_composeComment(),
@@ -191,8 +232,9 @@ class Converter {
 			'{$testUrl}' => $this->_testUrl ? $this->_testUrl : $this->_defaultTestUrl,
 			'{$remoteHost}' => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
 			'{$remotePort}' => $this->_remotePort ? $this->_remotePort : '4444',
-			'{$testMethodName}' => $this->_composeTestMethodName(),
-			'{$testMethodContent}' => $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
+			'{$testMethodName}' => $testMethodContent ? 'noop' : $this->_composeTestMethodName(),
+			'{$testMethodContent}' => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
+			'{$testMethods}' => $testMethodContent,
 			'{$customParam1}' => $this->_tplCustomParam1,
 			'{$customParam2}' => $this->_tplCustomParam2,
 		);
@@ -202,54 +244,64 @@ class Converter {
 		return $tpl;
 	}
 
-	protected function _composeLines() {
+	/**
+	 * Composes lines for the final class
+	 * @param boolean $functionOnly If true, only the function contents will be created
+	 * @param string $functionContent Extra content to be added instead the first function
+	 * @return string
+	 */
+	protected function _composeLines($functionOnly = false, $functionContent = null) {
 		$lines = array();
 
-		$lines[] = $this->_tplFirstLine;
-		$lines[] = $this->_composeComment();
+		if (!$functionOnly) {
+			$lines[] = $this->_tplFirstLine;
+			$lines[] = $this->_composeComment();
 
-		if (count($this->_tplPreClass)) {
-			$lines[] = "";
-			foreach ($this->_tplPreClass as $mLine) {
-				$lines[] = $mLine;
+			if (count($this->_tplPreClass)) {
+				$lines[] = "";
+				foreach ($this->_tplPreClass as $mLine) {
+					$lines[] = $mLine;
+				}
+				$lines[] = "";
 			}
+
+			$lines[] = "class " . $this->_composeClassName() . " extends " . $this->_tplParentClass . "{";
 			$lines[] = "";
-		}
 
-		$lines[] = "class " . $this->_composeClassName() . " extends " . $this->_tplParentClass . "{";
-		$lines[] = "";
-
-		if (count($this->_tplAdditionalClassContent)) {
-			foreach ($this->_tplAdditionalClassContent as $mLine) {
-				$lines[] = $this->_indent(4) . $mLine;
+			if (count($this->_tplAdditionalClassContent)) {
+				foreach ($this->_tplAdditionalClassContent as $mLine) {
+					$lines[] = $this->_indent(4) . $mLine;
+				}
+				$lines[] = "";
 			}
+
+
+			$lines[] = $this->_indent(4) . "function setUp(){";
+			foreach ($this->_composeSetupMethodContent() as $mLine) {
+				$lines[] = $this->_indent(8) . $mLine;
+			}
+			$lines[] = $this->_indent(4) . "}";
 			$lines[] = "";
 		}
+		if ($functionContent) {
+			$lines[] = $functionContent;
+		} else {
+			$lines[] = $this->_indent(4) . "function " . $this->_composeTestMethodName() . "(){";
 
-
-		$lines[] = $this->_indent(4) . "function setUp(){";
-		foreach ($this->_composeSetupMethodContent() as $mLine) {
-			$lines[] = $this->_indent(8) . $mLine;
+			foreach ($this->_composeTestMethodContent() as $mLine) {
+				$lines[] = $this->_indent(8) . $mLine;
+			}
+			$lines[] = $this->_indent(4) . "}";
+			$lines[] = "";
 		}
-		$lines[] = $this->_indent(4) . "}";
-		$lines[] = "";
-
-
-		$lines[] = $this->_indent(4) . "function " . $this->_composeTestMethodName() . "(){";
-		foreach ($this->_composeTestMethodContent() as $mLine) {
-			$lines[] = $this->_indent(8) . $mLine;
+		if (!$functionOnly) {
+			$lines[] = "}";
 		}
-		$lines[] = $this->_indent(4) . "}";
-		$lines[] = "";
-
-
-		$lines[] = "}";
-
 		return $lines;
 	}
 
 	protected function _indent($size) {
-		return str_repeat(" ", $size);
+		return str_repeat("\t", (int) ($size / 4));
 	}
 
 	protected function _composeClassName() {
@@ -414,4 +466,5 @@ class Converter {
 	public function setTplCustomParam2($value) {
 		$this->_tplCustomParam2 = $value;
 	}
+
 }

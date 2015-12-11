@@ -165,7 +165,7 @@ class CliController {
                             $phpFileName = '';
                         }
                         $this->_sourceBaseDir = rtrim(dirname($htmlFileName), "\\/")."/";
-                        $this->convertFile($htmlFileName, $phpFileName);
+                        $this->convertFilesInSuite($htmlFileName, $phpFileName);
                         print "OK.\n";
                         exit(0);
                     } else {
@@ -189,6 +189,19 @@ class CliController {
             }
         }
     }
+	
+	protected function convertFilesInSuite($suitePath, $phpFileName) {
+		$suiteContent = file_get_contents($suitePath);
+        if ($suiteContent) {
+            if (!$phpFileName) {
+                $phpFileName = $this->_makeOutputFilename($suitePath, $suiteContent);
+            }
+			$dir = dirname(realpath($suitePath));
+            $result = $this->_converter->convertSuite($suiteContent, $this->_makeTestName($suitePath), $this->_tplFile, $dir);
+            file_put_contents($phpFileName, $result);
+            print $phpFileName."\n";
+        }
+	}
     
     protected function convertFilesInDirectory($dir){
         if ($this->_recursive){

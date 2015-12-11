@@ -23,6 +23,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2TestCase {
 			$this->setBrowserUrl("{$testUrl}");
 			self::$first = true;
 		}
+		$this->currentBrowser = "{$browser}";
 		parent::setUp();
 	}
 	

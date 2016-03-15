@@ -27,6 +27,11 @@ namespace Selenium2php;
  */
 class Commands2 {
 
+	/**
+	 * Take screenshots after every "open" and "click" step?
+	 * @var boolean
+	 */
+	public $screenshotsOnEveryStep = false;
 	protected $_obj = '$this';
 
 	/**
@@ -55,7 +60,7 @@ class Commands2 {
 	}
 
 	public function open($target) {
-		return "{$this->_obj}->url(\"$target\");";
+		return array_merge(["{$this->_obj}->url(\"$target\");"], $this->screenshotOnStep());
 	}
 
 	public function type($selector, $value) {
@@ -119,7 +124,7 @@ class Commands2 {
 		// By ID (wait for element)
 		return "{$this->_obj}->byId(\"{$selector}\", true)";
 	}
-	
+
 	/**
 	 * By Name
 	 * @param string $selector
@@ -128,7 +133,7 @@ class Commands2 {
 		// By Name (wait for element)
 		return "{$this->_obj}->byName(\"{$selector}\", true)";
 	}
-	
+
 	/**
 	 * By css
 	 * @param string $selector
@@ -137,7 +142,7 @@ class Commands2 {
 		// By css (wait for element)
 		return "{$this->_obj}->byCssSelector(\"{$selector}\", true)";
 	}
-	
+
 	/**
 	 * byXPath
 	 * @param string $selector
@@ -146,7 +151,7 @@ class Commands2 {
 		// By XPath (wait for element)
 		return "{$this->_obj}->byXPath(\"{$selector}\", true)";
 	}
-	
+
 	/**
 	 * byLinkText
 	 * @param string $selector
@@ -185,7 +190,18 @@ class Commands2 {
 	 * @return array
 	 */
 	public function clickAndWait($target) {
-		return $this->click($target);
+		return array_merge($this->click($target), $this->screenshotOnStep());
+	}
+
+	/**
+	 * If the configuration screenshotsOnEveryStep is set to 1, a screenshot will be taken
+	 */
+	public function screenshotOnStep() {
+		$lines = [];
+		if ($this->screenshotsOnEveryStep) {
+			$lines[] = '$this->takeScreenshot();';
+		}
+		return $lines;
 	}
 
 	/**
@@ -475,7 +491,7 @@ class Commands2 {
 	 */
 	public function storeAttribute($target, $varName) {
 		$this->_checkVarName($varName);
-		$line = "{$this->_obj}->store(\"$varName\", " .  $this->_getAttributeByLocator($target) . ");";
+		$line = "{$this->_obj}->store(\"$varName\", " . $this->_getAttributeByLocator($target) . ");";
 		return $line;
 	}
 

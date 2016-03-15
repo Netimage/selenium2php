@@ -31,6 +31,7 @@ class CliController {
     protected $_sourceBaseDir = '';
     protected $_useHashFilePostfix = false;
     protected $_tplFile = '';
+	protected $_browsers = '';
 
     public function __construct() {
         require_once 'Converter.php';
@@ -64,7 +65,9 @@ class CliController {
         print "  --output-tpl=<file>            Template for result file. See TestExampleTpl.\n";
         print "  --custom-param1=<value>        Assign value to \$customParam1 in template.\n";
         print "  --custom-param2=<value>        Assign value to \$customParam2 in template.\n";
-    }
+		print "  --browsers=<value>				Comma-separated list of browser names to use (from browsers.ini)\n";
+		print "  --screenshotsOnEveryStep=<value> Take screenshots on every `click` or `open` event in the test\n";
+	}
     
     protected function _applyOptionsAndFlags($options, $flags){
         if (is_array($options)){
@@ -125,6 +128,13 @@ class CliController {
                         case 'custom-param2':
                             $this->_converter->setTplCustomParam2($opt[1]);
                             break;
+						case 'browsers':
+							$this->_browsers = $opt[1];
+							$this->_converter->browsers = $this->_browsers;
+							break;
+						case 'screenshotsOnEveryStep':
+							$this->_converter->screenshotsOnEveryStep = $opt[1];
+							break;
                         default:
                             print "Unknown option \"{$opt[0]}\".\n";
                             exit(1);

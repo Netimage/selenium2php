@@ -18,6 +18,11 @@
 
 namespace Selenium2php;
 
+use Exception;
+use SebastianBergmann\RecursionContext\Exception as Exception2;
+use SimpleXMLElement;
+use Zend_Config_Ini;
+
 /**
  * Converts HTML text of Selenium test case recorded from Selenium IDE into
  * PHP code for PHPUnit_Extensions_SeleniumTestCase as TestCase file.
@@ -33,6 +38,18 @@ class Converter {
 	protected $_tplEOL = PHP_EOL;
 	protected $_tplCommandEOL = '';
 	protected $_tplFirstLine = '<?php';
+
+	/**
+	 *
+	 * @var string
+	 */
+	public $browsers;
+	
+	/**
+	 *
+	 * @var boolean
+	 */
+	public $screenshotsOnEveryStep = false;
 
 	/**
 	 * Array of strings with text before class defenition
@@ -78,7 +95,7 @@ class Converter {
 	 * determines testHost and testName. 
 	 * 
 	 * @param string $htmlStr
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected function _parseHtml($htmlStr) {
 		require_once 'libs/simple_html_dom.php';
@@ -101,14 +118,14 @@ class Converter {
 					$value = $row->find('td', 2)->innertext;
 
 					$this->_commands[] = array(
-						'command' => $command,
-						'target' => $target,
-						'value' => $value
+						'command'	 => $command,
+						'target'	 => $target,
+						'value'		 => $value
 					);
 				}
 			}
 		} else {
-			throw new \Exception("HTML parse error");
+			throw new Exception("HTML parse error");
 		}
 	}
 
@@ -120,9 +137,9 @@ class Converter {
 		$xml = simplexml_load_string($htmlStr);
 
 		$results = [];
-		$links = $xml->body->table->tbody; /* @var $links \SimpleXMLElement */
+		$links = $xml->body->table->tbody; /* @var $links SimpleXMLElement */
 		foreach ($links->children() as $link) {
-			/* @var $link \SimpleXMLElement */
+			/* @var $link SimpleXMLElement */
 			if ($link->td->a) {
 				$linkAttributes = $link->td->a->attributes();
 				$href = (string) $linkAttributes['href'];
@@ -172,7 +189,7 @@ class Converter {
 		} else {
 			$content = $this->_composeStr($this->_composeLines(false, $testStringContent));
 		}
-		
+
 		return $content;
 	}
 
@@ -226,22 +243,74 @@ class Converter {
 	protected function _convertToTpl($tplFile, $testMethodContent = null) {
 		$tpl = file_get_contents($tplFile);
 		$replacements = array(
-			'{$comment}' => $this->_composeComment(),
-			'{$className}' => $this->_composeClassName(),
-			'{$browser}' => $this->_browser,
-			'{$testUrl}' => $this->_testUrl ? $this->_testUrl : $this->_defaultTestUrl,
-			'{$remoteHost}' => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
-			'{$remotePort}' => $this->_remotePort ? $this->_remotePort : '4444',
-			'{$testMethodName}' => $testMethodContent ? 'noop' : $this->_composeTestMethodName(),
-			'{$testMethodContent}' => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
-			'{$testMethods}' => $testMethodContent,
-			'{$customParam1}' => $this->_tplCustomParam1,
-			'{$customParam2}' => $this->_tplCustomParam2,
+			'{$comment}'			 => $this->_composeComment(),
+			'{$className}'			 => $this->_composeClassName(),
+			'{$browser}'			 => $this->_browser,
+			'{$testUrl}'			 => $this->_testUrl ? $this->_testUrl : $this->_defaultTestUrl,
+			'{$remoteHost}'			 => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
+			'{$remotePort}'			 => $this->_remotePort ? $this->_remotePort : '4444',
+			'{$testMethodName}'		 => $testMethodContent ? 'noop' : $this->_composeTestMethodName(),
+			'{$testMethodContent}'	 => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
+			'{$testMethods}'		 => $testMethodContent,
+			'{$customParam1}'		 => $this->_tplCustomParam1,
+			'{$customParam2}'		 => $this->_tplCustomParam2,
+			'{$browsers}'			 => $this->_createBrowsers()
 		);
 		foreach ($replacements as $s => $r) {
 			$tpl = str_replace($s, $r, $tpl);
 		}
 		return $tpl;
+	}
+
+	/**
+	 * Creates the array of browsers to use
+	 */
+	protected function _createBrowsers() {
+
+		$browsers = parse_ini_file(__DIR__ . DIRECTORY_SEPARATOR . 'conf' . DIRECTORY_SEPARATOR . 'browsers.ini', true);
+		print_r($this->browsers);
+		if (empty($this->browsers)) {
+			return '';
+		}
+		$template = "array(
+			'browserName'			 => '{browserName}',
+			'host'					 => 'hub.browserstack.com',
+			'port'					 => 80,
+			'desiredCapabilities'	 => array(
+				'version'			 => '{browserVersion}',
+				'browserstack.user'	 => BROWSERSTACK_USER,
+				'browserstack.key'	 => BROWSERSTACK_KEY,
+				'os'				 => '{os}',
+				'os_version'		 => '{osVersion}'
+			)
+		)";
+		$browserArr = array();
+
+		$browserList = explode(',', $this->browsers);
+		foreach ($browserList as $browserName) {
+			if (!isset($browsers[$browserName])) {
+				throw new Exception2("Unsupported browser with name $browserName specified");
+			}
+			$browser = $browsers[$browserName];
+			$this->setDefaultValues($browser, ['browserName' => null, 'browserVersion' => null, 'os' => null, 'osVersion' => null]);
+			$browserArr[] = str_replace(['{browserName}', '{browserVersion}', '{os}', '{osVersion}'], $browser, $template);
+		}
+
+
+		return implode(',', $browserArr);
+	}
+
+	/**
+	 * sets non-set values to default values
+	 * @param array $array
+	 * @param array $values key => default
+	 */
+	protected function setDefaultValues(&$array, $values) {
+		foreach ($values as $value => $default) {
+			if (!isset($array[$value])) {
+				$array[$value] = $default;
+			}
+		}
 	}
 
 	/**
@@ -337,6 +406,7 @@ class Converter {
 			require_once 'Commands.php';
 			$commands = new Commands;
 		}
+		$commands->screenshotsOnEveryStep = $this->screenshotsOnEveryStep;
 
 		$mLines = array();
 

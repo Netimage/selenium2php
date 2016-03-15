@@ -1,7 +1,17 @@
 <?php
 
 {$comment}
-class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
+class {$className} extends Selenium2php\PHPUnit\Selenium2AllBrowserTestCase {
+
+	/**
+	 * Configuration of browsers to run all tests in for all tests
+	 * This has to be defined in the array initializer, as it will be used inside the selenium test case
+	 * to iterate the tests.
+	 * @var array
+	 */
+	public static $browsers = array(
+		{$browsers}
+	);
 
 	public static $first = false;
 

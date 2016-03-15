@@ -192,7 +192,7 @@ class Commands2 {
 	 * @return array
 	 */
 	public function clickAndWait($target) {
-		return array_merge($this->click($target), $this->screenshotOnStep());
+		return array_merge($this->screenshotOnStep(), $this->click($target));
 	}
 
 	/**

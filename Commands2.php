@@ -33,6 +33,8 @@ class Commands2 {
 	 */
 	public $screenshotsOnEveryStep = false;
 	protected $_obj = '$this';
+	
+	public $stepCount = 1;
 
 	/**
 	 * 
@@ -199,7 +201,8 @@ class Commands2 {
 	public function screenshotOnStep() {
 		$lines = [];
 		if ($this->screenshotsOnEveryStep) {
-			$lines[] = '$this->takeScreenshot();';
+			$lines[] = '$this->takeScreenshot("step-' . $this->stepCount . '");';
+			$this->stepCount++;
 		}
 		return $lines;
 	}

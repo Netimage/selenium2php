@@ -1,7 +1,7 @@
 <?php
 
 {$comment}
-class {$className} extends Selenium2php\PHPUnit\Selenium2AllBrowserTestCase {
+class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 
 	/**
 	 * Configuration of browsers to run all tests in for all tests

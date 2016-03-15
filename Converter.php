@@ -277,7 +277,7 @@ class Converter {
 			'host'					 => 'hub.browserstack.com',
 			'port'					 => 80,
 			'desiredCapabilities'	 => array(
-				'version'			 => '{browserVersion}',
+				'version'			 => '{version}',
 				'browserstack.user'	 => BROWSERSTACK_USER,
 				'browserstack.key'	 => BROWSERSTACK_KEY,
 				'os'				 => '{os}',
@@ -292,8 +292,8 @@ class Converter {
 				throw new Exception2("Unsupported browser with name $browserName specified");
 			}
 			$browser = $browsers[$browserName];
-			$this->setDefaultValues($browser, ['browserName' => null, 'browserVersion' => null, 'os' => null, 'osVersion' => null]);
-			$browserArr[] = str_replace(['{browserName}', '{browserVersion}', '{os}', '{osVersion}'], $browser, $template);
+			$this->setDefaultValues($browser, ['browserName' => null, 'version' => null, 'os' => null, 'osVersion' => null]);
+			$browserArr[] = str_replace(['{browserName}', '{version}', '{os}', '{osVersion}'], [$browser['browserName'], $browser['version'], $browser['os'], $browser['osVersion']], $template);
 		}
 
 

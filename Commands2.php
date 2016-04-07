@@ -391,6 +391,18 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->store(\"$value\", \"$target\");";
 		return $lines;
 	}
+	
+	/**
+	 * Store evaluated expression (javascript)
+	 * @param string $target
+	 * @param string $value
+	 * @return array
+	 */
+	public function storeEval($target, $value) {
+		$lines = array();
+		$lines[] = "{$this->_obj}->store(\"$value\", \"javascript:$target\");";
+		return $lines;
+	}
 
 	/**
 	 * 

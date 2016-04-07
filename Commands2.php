@@ -403,6 +403,18 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->store(\"$value\", \"javascript:$target\");";
 		return $lines;
 	}
+	
+	/**
+	 * Fire javascript event on page 
+	 * @param string $target xpath, css, id expression
+	 * @param string $value Event type
+	 * @return array
+	 */
+	public function fireEvent($target, $value) {
+		$lines = array();
+		$lines[] = "{$this->_obj}->fireEvent(\"$target\", \"$value\");";
+		return $lines;
+	}
 
 	/**
 	 * 

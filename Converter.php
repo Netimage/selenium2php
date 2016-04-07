@@ -276,6 +276,7 @@ class Converter {
 			'browserName'			 => '{browserName}',
 			'host'					 => 'hub.browserstack.com',
 			'port'					 => 80,
+			'sessionStrategy'		 => 'shared',
 			'desiredCapabilities'	 => array(
 				'version'			 => '{version}',
 				'browserstack.user'	 => BROWSERSTACK_USER,

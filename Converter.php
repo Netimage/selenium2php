@@ -40,11 +40,23 @@ class Converter {
 	protected $_tplFirstLine = '<?php';
 
 	/**
+	 * Build ID specification
+	 * @var string 
+	 */
+	public $_projectBuild = null;
+
+	/**
+	 *
+	 * @var string Project name
+	 */
+	public $_projectName = null;
+
+	/**
 	 *
 	 * @var string
 	 */
 	public $browsers;
-	
+
 	/**
 	 *
 	 * @var boolean
@@ -268,16 +280,21 @@ class Converter {
 	protected function _createBrowsers() {
 
 		$browsers = parse_ini_file(__DIR__ . DIRECTORY_SEPARATOR . 'conf' . DIRECTORY_SEPARATOR . 'browsers.ini', true);
-		print_r($this->browsers);
+
 		if (empty($this->browsers)) {
 			return '';
 		}
+		$capabilities = $this->_createArrayParam('project', $this->_projectName) .
+		$this->_createArrayParam('build', $this->_projectBuild) .
+		$this->_createArrayParam('name', $this->_testName);
+
 		$template = "array(
 			'browserName'			 => '{browserName}',
 			'host'					 => 'hub.browserstack.com',
 			'port'					 => 80,
 			'sessionStrategy'		 => 'shared',
 			'desiredCapabilities'	 => array(
+				{$capabilities}
 				'version'			 => '{version}',
 				'browserstack.user'	 => BROWSERSTACK_USER,
 				'browserstack.key'	 => BROWSERSTACK_KEY,
@@ -299,6 +316,20 @@ class Converter {
 
 
 		return implode(',', $browserArr);
+	}
+	
+	/**
+	 * Creates a string representation of a key-value pair, if value is set
+	 * @param string $name
+	 * @param string $value
+	 * @return string
+	 */
+	protected function _createArrayParam($name, $value) {
+		$return = '';
+		if ($value) {
+			$return = "'{$name}'					 => '{$value}',\n";
+		}
+		return $return;
 	}
 
 	/**

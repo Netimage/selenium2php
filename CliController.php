@@ -21,6 +21,10 @@ namespace Selenium2php;
  */
 class CliController {
     
+	/**
+	 *
+	 * @var Converter
+	 */
     protected $_converter;
     
     protected $_htmlPattern = "*.html";
@@ -32,8 +36,20 @@ class CliController {
     protected $_useHashFilePostfix = false;
     protected $_tplFile = '';
 	protected $_browsers = '';
+	
+	/**
+	 * Build ID specification
+	 * @var string 
+	 */
+	protected $_projectBuild = null;
+	
+	/**
+	 *
+	 * @var string Project name
+	 */
+	protected $_projectName = null;
 
-    public function __construct() {
+	public function __construct() {
         require_once 'Converter.php';
         $this->_converter = new Converter;
     }
@@ -66,6 +82,8 @@ class CliController {
         print "  --custom-param1=<value>        Assign value to \$customParam1 in template.\n";
         print "  --custom-param2=<value>        Assign value to \$customParam2 in template.\n";
 		print "  --browsers=<value>				Comma-separated list of browser names to use (from browsers.ini)\n";
+		print "  --project-build=<value>		The build triggering this test (e.g. 42)\n";
+		print "  --project-name=<value>			The project name triggering this test (e.g. Specsavers)\n";
 		print "  --screenshotsOnEveryStep=<value> Take screenshots on every `click` or `open` event in the test\n";
 	}
     
@@ -131,6 +149,14 @@ class CliController {
 						case 'browsers':
 							$this->_browsers = $opt[1];
 							$this->_converter->browsers = $this->_browsers;
+							break;
+						case 'project-build':
+							$this->_projectBuild = $opt[1];
+							$this->_converter->_projectBuild = $this->_projectBuild;
+							break;
+						case 'project-name':
+							$this->_projectName = $opt[1];
+							$this->_converter->_projectName = $this->_projectName;
 							break;
 						case 'screenshotsOnEveryStep':
 							$this->_converter->screenshotsOnEveryStep = $opt[1];

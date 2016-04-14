@@ -195,6 +195,24 @@ class Commands2 {
 		return array_merge($this->screenshotOnStep(), $this->click($target));
 	}
 
+	public function captureEntirePageScreenshot($target) {
+		$lines = [];
+		if (mb_strlen(trim($target)) > 0) {
+			$filename = $target;
+			if ($pos = mb_strripos($filename, '/')) {
+				$filename = mb_substr($filename, $pos + 1);
+			}
+			if ($pos = mb_strripos($filename, '\\')) {
+				$filename = mb_substr($filename, $pos + 1);
+			}
+		} else {
+			$filename = "step-'{$this->stepCount}";
+			$this->stepCount++;
+		}
+		$lines[] = '$this->takeScreenshot("' . $filename . '");';
+		return $lines;
+	}
+	
 	/**
 	 * If the configuration screenshotsOnEveryStep is set to 1, a screenshot will be taken
 	 */

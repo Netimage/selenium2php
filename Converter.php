@@ -64,6 +64,12 @@ class Converter {
 	public $screenshotsOnEveryStep = false;
 
 	/**
+	 *
+	 * @var boolean
+	 */
+	public $browserstackLocal = false;
+
+	/**
 	 * Array of strings with text before class defenition
 	 * @var array 
 	 */
@@ -287,6 +293,9 @@ class Converter {
 		$capabilities = $this->_createArrayParam('project', $this->_projectName) .
 		$this->_createArrayParam('build', $this->_projectBuild) .
 		$this->_createArrayParam('name', $this->_testName);
+		if ($this->browserstackLocal) {
+			$capabilities .= $this->_createArrayParam('browserstack.local', (bool) $this->browserstackLocal);
+		}
 
 		$template = "array(
 			'browserName'			 => '{browserName}',

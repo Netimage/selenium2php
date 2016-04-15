@@ -86,6 +86,7 @@ class CliController {
 		print "  --project-name=<value>			The project name triggering this test (e.g. Specsavers)\n";
 		print "  --screenshotsOnEveryStep=<value> Take screenshots on every `click` or `open` event in the test\n";
 		print "  --browserstackLocal=<value>	Execute local testing from BrowserStack\n";
+		print "  --override-selenium-params=<key,value;key,value...>	Specify a list of stores parameters to always override. E.g var_ORIGIN,http://localhost\n";
 	}
     
     protected function _applyOptionsAndFlags($options, $flags){
@@ -164,6 +165,9 @@ class CliController {
 							break;
 						case 'browserstackLocal':
 							$this->_converter->browserstackLocal = $opt[1];
+							break;
+						case 'override-selenium-params':
+							$this->_converter->overrideSeleniumParams = $opt[1];
 							break;
                         default:
                             print "Unknown option \"{$opt[0]}\".\n";

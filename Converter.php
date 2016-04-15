@@ -68,6 +68,12 @@ class Converter {
 	 * @var boolean
 	 */
 	public $browserstackLocal = false;
+	
+	/**
+	 *
+	 * @var string
+	 */
+	public $overrideSeleniumParams = null;
 
 	/**
 	 * Array of strings with text before class defenition
@@ -316,7 +322,7 @@ class Converter {
 		$browserList = explode(',', $this->browsers);
 		foreach ($browserList as $browserName) {
 			if (!isset($browsers[$browserName])) {
-				throw new Exception2("Unsupported browser with name $browserName specified");
+				throw new Exception("Unsupported browser with name $browserName specified");
 			}
 			$browser = $browsers[$browserName];
 			$this->setDefaultValues($browser, ['browserName' => null, 'version' => null, 'os' => null, 'osVersion' => null]);
@@ -448,6 +454,15 @@ class Converter {
 			$commands = new Commands;
 		}
 		$commands->screenshotsOnEveryStep = $this->screenshotsOnEveryStep;
+		
+		// Key value pars
+		$vars = explode(';', $this->overrideSeleniumParams);
+		if (is_array($vars) && count($vars) > 0) {
+			foreach($vars as $var) {
+				list($key, $value) = explode(',', $var);
+				$commands->overrideSeleniumParams[$key] = $value;
+			}
+		}
 
 		$mLines = array();
 

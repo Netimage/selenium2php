@@ -32,6 +32,13 @@ class Commands2 {
 	 * @var boolean
 	 */
 	public $screenshotsOnEveryStep = false;
+	
+	/**
+	 * Array of parameters to always override
+	 * @var array
+	 */
+	public $overrideSeleniumParams = array();
+	
 	protected $_obj = '$this';
 	
 	public $stepCount = 1;
@@ -389,7 +396,8 @@ class Commands2 {
 	 */
 	public function storeValue($target, $value) {
 		$lines = array();
-		$lines[] = "{$this->_obj}->storeValue(\"$target\", \"$value\");";
+		$parsedValue = $this->assignKeyValue($target, $value);
+		$lines[] = "{$this->_obj}->storeValue(\"$target\", \"$parsedValue\");";
 		return $lines;
 	}
 
@@ -400,13 +408,15 @@ class Commands2 {
 	 */
 	public function storeXpathCount($target, $value) {
 		$lines = array();
-		$lines[] = "{$this->_obj}->storeXpathCount(\"$target\", \"$value\");";
+		$parsedValue = $this->assignKeyValue($target, $value);
+		$lines[] = "{$this->_obj}->storeXpathCount(\"$target\", \"$parsedValue\");";
 		return $lines;
 	}
 
 	public function store($target, $value) {
 		$lines = array();
-		$lines[] = "{$this->_obj}->store(\"$value\", \"$target\");";
+		$parsedTarget = $this->assignKeyValue($value, $target);
+		$lines[] = "{$this->_obj}->store(\"$value\", \"$parsedTarget\");";
 		return $lines;
 	}
 	
@@ -418,8 +428,24 @@ class Commands2 {
 	 */
 	public function storeEval($target, $value) {
 		$lines = array();
-		$lines[] = "{$this->_obj}->store(\"$value\", \"javascript:$target\");";
+		$parsedValue = $this->assignKeyValue($target, $value);
+		$lines[] = "{$this->_obj}->store(\"$parsedValue\", \"javascript:$target\");";
 		return $lines;
+	}
+	
+	/**
+	 * 
+	 * @param string $key
+	 * @param string $value
+	 * @return string Correct value
+	 */
+	private function assignKeyValue($key, $value) {
+		// Override?
+		if (isset($this->overrideSeleniumParams[$key])) {
+			$value = $this->overrideSeleniumParams[$key];
+			echo "overriding value: $key = $value";
+		}
+		return $value;
 	}
 	
 	/**

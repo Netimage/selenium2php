@@ -299,7 +299,7 @@ class Converter {
 		$capabilities = $this->_createArrayParam('project', $this->_projectName) .
 		$this->_createArrayParam('build', $this->_projectBuild) .
 		$this->_createArrayParam('name', $this->_testName);
-		if ($this->browserstackLocal) {
+		if (intval($this->browserstackLocal)) {
 			$capabilities .= $this->_createArrayParam('browserstack.local', (bool) $this->browserstackLocal);
 		}
 
@@ -342,7 +342,11 @@ class Converter {
 	protected function _createArrayParam($name, $value) {
 		$return = '';
 		if ($value) {
-			$return = "'{$name}'					 => '{$value}',\n";
+			if (is_bool($value)) {
+				$return = "'{$name}'					 => " . ($value ? 'true' : 'false') . ",\n";
+			} else {
+				$return = "'{$name}'					 => '{$value}',\n";
+			}
 		}
 		return $return;
 	}

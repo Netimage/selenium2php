@@ -73,6 +73,12 @@ class Converter {
 	 *
 	 * @var string
 	 */
+	public $browserstackLocalIdentifier = false;
+
+	/**
+	 *
+	 * @var string
+	 */
 	public $overrideSeleniumParams = null;
 
 	/**
@@ -301,6 +307,9 @@ class Converter {
 		$this->_createArrayParam('name', $this->_testName);
 		if (intval($this->browserstackLocal)) {
 			$capabilities .= $this->_createArrayParam('browserstack.local', (bool) $this->browserstackLocal);
+			if ($this->browserstackLocalIdentifier) {
+				$capabilities .= $this->_createArrayParam('browserstack.localIdentifier', $this->browserstackLocalIdentifier);
+			}
 		}
 
 		$template = "array(
@@ -332,7 +341,7 @@ class Converter {
 
 		return implode(',', $browserArr);
 	}
-	
+
 	/**
 	 * Creates a string representation of a key-value pair, if value is set
 	 * @param string $name
@@ -458,12 +467,12 @@ class Converter {
 			$commands = new Commands;
 		}
 		$commands->screenshotsOnEveryStep = $this->screenshotsOnEveryStep;
-		
+
 		// Key value pars
 		echo $this->overrideSeleniumParams;
 		$vars = explode('$', $this->overrideSeleniumParams);
 		if (is_array($vars) && count($vars) > 0) {
-			foreach($vars as $var) {
+			foreach ($vars as $var) {
 				list($key, $value) = explode(',', $var);
 				$commands->overrideSeleniumParams[$key] = $value;
 			}

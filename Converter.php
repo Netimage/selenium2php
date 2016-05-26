@@ -415,12 +415,19 @@ class Converter {
 		if ($functionContent) {
 			$lines[] = $functionContent;
 		} else {
-			$lines[] = $this->_indent(4) . "function " . $this->_composeTestMethodName() . "(){";
+			$lines[] = $this->_indent(4) . "function " . $this->_composeTestMethodName() . "() {";
+			
+			$lines[] = $this->_indent(4) . 'try {';
 
 			foreach ($this->_composeTestMethodContent() as $mLine) {
 				$lines[] = $this->_indent(8) . $mLine;
 			}
-			$lines[] = $this->_indent(4) . "}";
+			
+			$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
+			$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with message `" . $e->getMessage());';
+			$lines[] = $this->_indent(4) . '}';
+			
+			$lines[] = "}";
 			$lines[] = "";
 		}
 		if (!$functionOnly) {

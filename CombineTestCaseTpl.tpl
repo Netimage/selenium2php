@@ -20,6 +20,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 		if (!self::$first) {
 			self::shareSession(true);
 			self::$first = true;
+			$this->store('var_EMAIL', 'dk.combine.qa+sys-03-01-' . uniqid() . '@gmail.com');
 		}
 		$this->setBrowserUrl("{$testUrl}");
 		// $this->currentBrowser = "chrome";
@@ -31,7 +32,11 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 	}
 	
 	public function {$testMethodName}() {
-		{$testMethodContent}
+		try {
+			{$testMethodContent}
+		} catch (Exception $e) {
+			$this->fail("Selenium test " . __METHOD__ . " failed with message `" . $e->getMessage() . "\n" . print_r($e, true));
+		}
 	}
 	
 {$testMethods}

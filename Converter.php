@@ -478,7 +478,7 @@ class Converter {
 		// Key value pars
 		echo $this->overrideSeleniumParams;
 		$vars = explode('$', $this->overrideSeleniumParams);
-		if (is_array($vars) && count($vars) > 0) {
+		if (!empty($this->overrideSeleniumParams) && is_array($vars) && count($vars) > 0) {
 			foreach ($vars as $var) {
 				list($key, $value) = explode(',', $var);
 				$commands->overrideSeleniumParams[$key] = $value;

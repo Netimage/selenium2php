@@ -171,7 +171,9 @@ class CliController {
 							$this->_converter->browserstackLocalIdentifier = $opt[1];
 							break;
 						case 'override-selenium-params':
-							$this->_converter->overrideSeleniumParams = $opt[1];
+							if (isset($opt[1])) {
+								$this->_converter->overrideSeleniumParams = $opt[1];
+							}
 							break;
                         default:
                             print "Unknown option \"{$opt[0]}\".\n";

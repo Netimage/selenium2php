@@ -475,7 +475,7 @@ class Converter {
 		}
 		$commands->screenshotsOnEveryStep = $this->screenshotsOnEveryStep;
 
-		// Key value pars
+		// Key value pairs
 		echo $this->overrideSeleniumParams;
 		$vars = explode('$', $this->overrideSeleniumParams);
 		if (is_array($vars) && count($vars) > 0) {

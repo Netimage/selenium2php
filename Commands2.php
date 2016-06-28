@@ -360,6 +360,45 @@ class Commands2 {
 	}
 
 	/**
+	 * 
+	 * @param string $target
+	 * @return array
+	 */
+	public function waitForVisible($target) {
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+
+		/*
+		 * In Selenium 2 we can not interact with invisible elements.
+		 */
+
+		$lines = array();
+		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = '    try {';
+		$lines[] = "        \$element = $localExpression;";
+		$lines[] = "        if (\$element && \$element->displayed()) {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
+		$lines[] = '    } catch (Exception $e) {}';
+		$lines[] = '}, 30000);';
+		return $lines;
+	}
+
+	public function waitForNotVisible($target) {
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$lines = array();
+		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = "    try {";
+		$lines[] = "        $localExpression;";
+		$lines[] = '    } catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
+		$lines[] = "        if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement == \$e->getCode()) {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
+		$lines[] = '    }';
+		$lines[] = '}, 30000);';
+		return $lines;
+	}
+
+	/**
 	 * SELENIUM DEPRECATED
 	 * 
 	 * @param string $target

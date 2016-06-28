@@ -124,6 +124,18 @@ class Commands2 {
 		}
 		throw new \Exception("Unknown selector '$selector'");
 	}
+	
+	/**
+	 * Wait for condition
+	 * @param string $condition
+	 * @param int $timeout
+	 * @return string
+	 */
+	public function waitForCondition($condition, $timeout) {
+		// Replace selenium.browserbot.getUserWindow(). with nothing. This is the default scope when ran through browserstack
+		$condition = str_replace('selenium.browserbot.getUserWindow().', '', $condition);
+		return "{$this->_obj}->waitForCondition(\"{$condition}\", \"{$timeout}\");";
+	}
 
 	/**
 	 * By ID

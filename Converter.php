@@ -38,6 +38,7 @@ class Converter {
 	protected $_tplEOL = PHP_EOL;
 	protected $_tplCommandEOL = '';
 	protected $_tplFirstLine = '<?php';
+	protected $methodNames = array();
 
 	/**
 	 * Build ID specification
@@ -445,7 +446,13 @@ class Converter {
 	}
 
 	protected function _composeTestMethodName() {
-		return "test" . $this->_testName;
+		$return = $methodName = "test" . $this->_testName;
+		if (isset($this->methodNames[$methodName])) {
+			$return = $methodName . sprintf('%03d', (sizeof($this->methodNames[$methodName]) + 1));
+		}
+		$this->methodNames[$methodName][] = $return;
+		
+		return $return;
 	}
 
 	protected function _composeSetupMethodContent() {
@@ -478,6 +485,7 @@ class Converter {
 		// Key value pairs
 		$vars = explode('$', $this->overrideSeleniumParams);
 		if (!empty($this->overrideSeleniumParams) && is_array($vars) && count($vars) > 0) {
+			var_dump($vars);
 			foreach ($vars as $var) {
 				list($key, $value) = explode(',', $var);
 				$commands->overrideSeleniumParams[$key] = $value;

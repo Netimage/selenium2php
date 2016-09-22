@@ -643,6 +643,7 @@ class Commands2 {
 		 */
 		$elementTarget = preg_replace('/(.+?)\/?@([\S]+)$/', '$1', $locator);
 		$attribute = preg_replace('/(.+?)\/?@([\S]+)$/', '$2', $locator);
+		$attribute = str_replace("'", "\'", $attribute);
 		$line = $this->_byQuery($elementTarget) . "->attribute('$attribute')";
 		return $line;
 	}
@@ -696,5 +697,49 @@ class Commands2 {
 		$lines[] = " }, $timeout);";
 		return $lines;
 	}
+	
+	/**
+	 * 
+	 * @param string $target
+	 * @return array
+	 */
+	public function assertVisible($target) {
+		$lines = array();
+		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
+		$lines[] = "{$this->_obj}->assertTrue(\$element && \$element->displayed());";
+		return $lines;
+	}
+	
+	/**
+	 * 
+	 * @param string $target
+	 * @return array
+	 */
+	public function assertNotVisible($target) {
+		$lines = array();
+		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
+		$lines[] = "{$this->_obj}->assertFalse(\$element && \$element->displayed());";
+		return $lines;
+	}
+	
+	/**
+	 * 
+	 * @param string $target
+	 * @return string Expression
+	 */
+	public function assertLocation($target) {
+		$line = "{$this->_obj}->assertEquals('{$target}', {$this->_obj}->getCurrentURL());";
+		return $line;
+	}
 
+	/**
+	 * 
+	 * @param string $varName
+	 * @return string Expression
+	 */
+	public function storeLocation($varName) {
+		$this->_checkVarName($varName);
+		$line = "\${$varName} = {$this->_obj}->getCurrentURL();";
+		return $line;
+	}
 }

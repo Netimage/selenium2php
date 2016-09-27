@@ -641,8 +641,8 @@ class Commands2 {
 		/*
 		 * /(.+)\/@([\S])+$/ ~ //div/a/@href -> //div/a
 		 */
-		$elementTarget = preg_replace('/(.+?)\/?@([\S]+)$/', '$1', $locator);
-		$attribute = preg_replace('/(.+?)\/?@([\S]+)$/', '$2', $locator);
+		$elementTarget = preg_replace('/(.+@?)\/?@([\S]+)$/', '$1', $locator);
+		$attribute = preg_replace('/(.+@?)\/?@([\S]+)$/', '$2', $locator);
 		$attribute = str_replace("'", "\'", $attribute);
 		$line = $this->_byQuery($elementTarget) . "->attribute('$attribute')";
 		return $line;

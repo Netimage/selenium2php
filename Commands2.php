@@ -727,7 +727,7 @@ class Commands2 {
 	 * @param string $target
 	 * @return string Expression
 	 */
-	public function assertLocation($target) {
+	public function _assertLocation($target) {
 		$line = "{$this->_obj}->assertEquals('{$target}', {$this->_obj}->getCurrentURL());";
 		return $line;
 	}
@@ -737,7 +737,7 @@ class Commands2 {
 	 * @param string $varName
 	 * @return string Expression
 	 */
-	public function storeLocation($varName) {
+	public function _storeLocation($varName) {
 		$this->_checkVarName($varName);
 		$line = "\${$varName} = {$this->_obj}->getCurrentURL();";
 		return $line;

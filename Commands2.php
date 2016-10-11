@@ -727,8 +727,8 @@ class Commands2 {
 	 * @param string $target
 	 * @return string Expression
 	 */
-	public function _assertLocation($target) {
-		$line = "{$this->_obj}->assertEquals('{$target}', {$this->_obj}->getCurrentURL());";
+	public function assertLocation($target) {
+		$line = "{$this->_obj}->assertEquals('{$target}', {$this->_obj}->url());";
 		return $line;
 	}
 
@@ -737,9 +737,46 @@ class Commands2 {
 	 * @param string $varName
 	 * @return string Expression
 	 */
-	public function _storeLocation($varName) {
+	public function storeLocation($varName) {
 		$this->_checkVarName($varName);
-		$line = "\${$varName} = {$this->_obj}->getCurrentURL();";
+		$line = "\${$varName} = {$this->_obj}->url();";
 		return $line;
 	}
+	
+	public function assertEval($script, $value) {
+		$lines = $this->runScript($script);
+		$lines[] = "{$this->_obj}->assertEquals('{$value}', \$result);";
+		return $lines;
+	}
+	
+	public function assertXpathCount($target, $count) {
+		$line = "{$this->_obj}->assertEquals('{$count}', {$this->_obj}->xPathCount(\"{$target}\"));";
+		return $line;
+	}
+	
+	public function assertNotXpathCount($target, $count) {
+		$line = "{$this->_obj}->assertNotEquals('{$count}', {$this->_obj}->xPathCount(\"{$target}\"));";
+		return $line;
+	}
+	
+	/**
+	 * 
+	 * @param string $target
+	 * @return array
+	 */
+	public function waitForLocation($target) {
+		$localExpression = str_replace($this->_obj, '$testCase', "{$this->_obj}->url()");
+
+		$lines = array();
+		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = '    try {';
+		$lines[] = "        \$url = {$localExpression};";
+		$lines[] = "        if (\$url === '{$target}') {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
+		$lines[] = '    } catch (Exception $e) {}';
+		$lines[] = '}, 30000);';
+		return $lines;
+	}
+
 }

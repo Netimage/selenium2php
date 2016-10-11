@@ -32,7 +32,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 	}
 	
 	public function {$testMethodName}() {
-		try {
+ 		try {
 			{$testMethodContent}
 		} catch (Exception $e) {
 			$this->fail("Selenium test " . __METHOD__ . " failed with message `" . $e->getMessage() . "\n" . print_r($e, true));

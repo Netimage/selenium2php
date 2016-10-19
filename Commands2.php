@@ -32,15 +32,13 @@ class Commands2 {
 	 * @var boolean
 	 */
 	public $screenshotsOnEveryStep = false;
-	
+
 	/**
 	 * Array of parameters to always override
 	 * @var array
 	 */
 	public $overrideSeleniumParams = array();
-	
 	protected $_obj = '$this';
-	
 	public $stepCount = 1;
 
 	/**
@@ -114,6 +112,8 @@ class Commands2 {
 					return $this->byLinkText($match[2]);
 					break;
 				case 'xpath':
+					// Remove trailing slash
+					$match[2] = rtrim($match[2], '/');
 					return $this->byXPath($match[2]);
 					break;
 				case 'css':
@@ -124,7 +124,7 @@ class Commands2 {
 		}
 		throw new \Exception("Unknown selector '$selector'");
 	}
-	
+
 	/**
 	 * Wait for condition
 	 * @param string $condition
@@ -242,7 +242,7 @@ class Commands2 {
 		$lines[] = '$this->takeScreenshot("' . $filename . '");';
 		return $lines;
 	}
-	
+
 	/**
 	 * If the configuration screenshotsOnEveryStep is set to 1, a screenshot will be taken
 	 */
@@ -481,7 +481,7 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->store(\"$value\", \"$parsedTarget\");";
 		return $lines;
 	}
-	
+
 	/**
 	 * Store evaluated expression (javascript)
 	 * @param string $target
@@ -494,7 +494,7 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->store(\"$parsedValue\", \"javascript:$target\");";
 		return $lines;
 	}
-	
+
 	/**
 	 * 
 	 * @param string $key
@@ -509,7 +509,7 @@ class Commands2 {
 		}
 		return $value;
 	}
-	
+
 	/**
 	 * Fire javascript event on page 
 	 * @param string $target xpath, css, id expression
@@ -609,10 +609,7 @@ class Commands2 {
 	public function runScript($script) {
 		$lines = array();
 		$lines[] = "\$script = \"$script\";";
-		$lines[] = "\$result = {$this->_obj}->execute(array(";
-		$lines[] = "    'script' => \$script,";
-		$lines[] = "    'args' => array()";
-		$lines[] = "));";
+		$lines[] = "\$result = {$this->_obj}->runJavascript([\$script]);";
 		return $lines;
 	}
 
@@ -709,7 +706,7 @@ class Commands2 {
 		$lines[] = " }, $timeout);";
 		return $lines;
 	}
-	
+
 	/**
 	 * 
 	 * @param string $target
@@ -721,7 +718,7 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->assertTrue(\$element && \$element->displayed());";
 		return $lines;
 	}
-	
+
 	/**
 	 * 
 	 * @param string $target
@@ -733,7 +730,7 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->assertFalse(\$element && \$element->displayed());";
 		return $lines;
 	}
-	
+
 	/**
 	 * 
 	 * @param string $target
@@ -754,23 +751,27 @@ class Commands2 {
 		$line = "{$this->_obj}->store(\"$varName\", {$this->_obj}->url();";
 		return $line;
 	}
-	
+
 	public function assertEval($script, $value) {
 		$lines = $this->runScript($script);
-		$lines[] = "{$this->_obj}->assertEquals('{$value}', \$result);";
+		if ($value == 'true') {
+			$lines[] = "{$this->_obj}->assertTrue(\$result);";
+		} else {
+			$lines[] = "{$this->_obj}->assertEquals(\"{$value}\", \$result);";
+		}
 		return $lines;
 	}
-	
+
 	public function assertXpathCount($target, $count) {
-		$line = "{$this->_obj}->assertEquals('{$count}', {$this->_obj}->xPathCount(\"{$target}\"));";
+		$line = "{$this->_obj}->assertEquals(\"{$count}\", {$this->_obj}->xPathCount(\"{$target}\"));";
 		return $line;
 	}
-	
+
 	public function assertNotXpathCount($target, $count) {
-		$line = "{$this->_obj}->assertNotEquals('{$count}', {$this->_obj}->xPathCount(\"{$target}\"));";
+		$line = "{$this->_obj}->assertNotEquals(\"{$count}\", {$this->_obj}->xPathCount(\"{$target}\"));";
 		return $line;
 	}
-	
+
 	/**
 	 * 
 	 * @param string $target

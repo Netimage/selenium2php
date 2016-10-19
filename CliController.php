@@ -175,6 +175,11 @@ class CliController {
 								$this->_converter->overrideSeleniumParams = $opt[1];
 							}
 							break;
+						case 'single-test':
+							if (isset($opt[1])) {
+								$this->_converter->singleTest = true;
+							}
+							break;
                         default:
                             print "Unknown option \"{$opt[0]}\".\n";
                             exit(1);

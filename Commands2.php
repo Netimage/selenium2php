@@ -206,6 +206,17 @@ class Commands2 {
 	}
 
 	/**
+	 * Passthrough
+	 * 
+	 * @param string $selectSelector
+	 * @param string $optionSelector
+	 * @return array
+	 */
+	public function selectAndWait($selectSelector, $optionSelector) {
+		return $this->select($selectSelector, $optionSelector);
+	}
+
+	/**
 	 * 
 	 * @param string $target
 	 * @return array
@@ -258,7 +269,7 @@ class Commands2 {
 			$value = '/' . str_replace('*', '.+', $value) . '/';
 			$lines[] = "{$this->_obj}->assertRegExp(\"$value\", \$input->text());";
 		} else {
-			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \$input->text());";
+			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \$input->text(), \"Failed to assert equal '{$value}' to '{\$input->text()}'\");";
 		}
 
 		return $lines;
@@ -665,7 +676,8 @@ class Commands2 {
 		$this->_checkVarName($varName);
 		$lines = array();
 		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
-		$lines[] = "\$$varName = \$element->text();";
+		$lines[] = "{$this->_obj}->store(\"$varName\", \$element->text());";
+		$lines[] = "echo(\$element->text());";
 		return $lines;
 	}
 
@@ -728,7 +740,7 @@ class Commands2 {
 	 * @return string Expression
 	 */
 	public function assertLocation($target) {
-		$line = "{$this->_obj}->assertEquals('{$target}', {$this->_obj}->url());";
+		$line = "{$this->_obj}->assertEquals(\"{$target}\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
 		return $line;
 	}
 
@@ -739,7 +751,7 @@ class Commands2 {
 	 */
 	public function storeLocation($varName) {
 		$this->_checkVarName($varName);
-		$line = "\${$varName} = {$this->_obj}->url();";
+		$line = "{$this->_obj}->store(\"$varName\", {$this->_obj}->url();";
 		return $line;
 	}
 	
@@ -767,11 +779,24 @@ class Commands2 {
 	public function waitForLocation($target) {
 		$localExpression = str_replace($this->_obj, '$testCase', "{$this->_obj}->url()");
 
+		$re = '/(\\${[a-zA-Z_]*\\})/';
+		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
+		preg_match_all($re, $target, $matches);
+		if (count($matches) > 0) {
+			$search = $replace = [];
+			$matchList = reset($matches);
+			foreach ($matchList as $match) {
+				$search[] = $match;
+				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
+			}
+		}
+		$localValue = str_replace($search, $replace, $target);
+
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$url = {$localExpression};";
-		$lines[] = "        if (\$url === '{$target}') {";
+		$lines[] = "        if (\$url === \"{$localValue}\") {";
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';

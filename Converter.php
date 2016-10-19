@@ -75,6 +75,12 @@ class Converter {
 	 * @var string
 	 */
 	public $browserstackLocalIdentifier = false;
+	
+	/**
+	 *
+	 * @var string
+	 */
+	public $singleTest = false;
 
 	/**
 	 *
@@ -314,11 +320,11 @@ class Converter {
 		}
 
 		$template = "array(
-			'browserName'			 => '{browserName}',
-			'host'					 => 'hub.browserstack.com',
-			'port'					 => 80,
-			'sessionStrategy'		 => 'shared',
-			'desiredCapabilities'	 => array(
+			'browserName'				=> '{browserName}',
+			'host'						=> 'hub.browserstack.com',
+			'port'						=> 80,
+			'sessionStrategy'			=> 'shared',
+			'desiredCapabilities'		=> array(
 				{$capabilities}
 				'version'			 => '{version}',
 				'browserstack.user'	 => BROWSERSTACK_USER,

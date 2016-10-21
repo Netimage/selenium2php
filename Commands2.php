@@ -800,12 +800,20 @@ class Commands2 {
 	}
 
 	public function assertXpathCount($target, $count) {
-		$line = "{$this->_obj}->assertEquals(\"{$count}\", {$this->_obj}->xPathCount(\"{$target}\"));";
+		// For non-numeric values: Escape
+		if (!is_numeric($count)) {
+			$count = '"' . $count . '"';
+		}
+		$line = "{$this->_obj}->assertEquals($count, {$this->_obj}->xPathCount(\"{$target}\"));";
 		return $line;
 	}
 
 	public function assertNotXpathCount($target, $count) {
-		$line = "{$this->_obj}->assertNotEquals(\"{$count}\", {$this->_obj}->xPathCount(\"{$target}\"));";
+		// For non-numeric values: Escape
+		if (!is_numeric($count)) {
+			$count = '"' . $count . '"';
+		}
+		$line = "{$this->_obj}->assertNotEquals($count, {$this->_obj}->xPathCount(\"{$target}\"));";
 		return $line;
 	}
 

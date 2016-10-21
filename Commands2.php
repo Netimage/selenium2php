@@ -95,7 +95,14 @@ class Commands2 {
 		return $lines;
 	}
 
-	protected function _byQuery($selector) {
+	/**
+	 * 
+	 * @param type $selector
+	 * @param boolean $wait Wait for element to be visible (currently only implemented on ID)
+	 * @return type
+	 * @throws \Exception
+	 */
+	protected function _byQuery($selector, $wait = true) {
 		if (preg_match('/^\/\/(.+)/', $selector)) {
 			/* "//a[contains(@href, '?logout')]" */
 			return $this->byXPath($selector);
@@ -103,7 +110,7 @@ class Commands2 {
 			/* "id=login_name" */
 			switch ($match[1]) {
 				case 'id':
-					return $this->byId($match[2]);
+					return $this->byId($match[2], $wait);
 					break;
 				case 'name':
 					return $this->byName($match[2]);
@@ -140,10 +147,11 @@ class Commands2 {
 	/**
 	 * By ID
 	 * @param string $selector
+	 * @param boolean $wait Wait for element
 	 */
-	public function byId($selector) {
+	public function byId($selector, $wait = true) {
 		// By ID (wait for element)
-		return "{$this->_obj}->byId(\"{$selector}\", true)";
+		return "{$this->_obj}->byId(\"{$selector}\", " . ($wait ? 'true' : 'false') . ")";
 	}
 
 	/**
@@ -186,6 +194,12 @@ class Commands2 {
 		$lines = array();
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->click();';
+		
+		// If we got a dialog; simply confirm it
+		$lines[] = 'try {';
+		$lines[] = '    ' . $this->_obj . '->acceptAlert();';
+		$lines[] = '} catch (Exception $e) { // Do not care; the link may not produce a dialog';
+		$lines[] = '}';
 		return $lines;
 	}
 
@@ -223,6 +237,24 @@ class Commands2 {
 	 */
 	public function clickAndWait($target) {
 		return array_merge($this->screenshotOnStep(), $this->click($target));
+	}
+	
+	/**
+	 * 
+	 * @param string $target
+	 * @return array
+	 */
+	public function verifyLocation($target) {
+		$lines = [];
+		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = '    try {';
+		$lines[] = "        // Wait for location";
+		$lines[] = "        if ({$this->_obj}->url() == \"$target\") {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
+		$lines[] = '    } catch (Exception $e) {}';
+		$lines[] = '}, 30000);';
+		return $lines;
 	}
 
 	public function captureEntirePageScreenshot($target) {
@@ -726,8 +758,13 @@ class Commands2 {
 	 */
 	public function assertNotVisible($target) {
 		$lines = array();
-		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
-		$lines[] = "{$this->_obj}->assertFalse(\$element && \$element->displayed());";
+		// By query; do not wait for element to be visible
+		$lines[] = "try {";
+		$lines[] = '    $element = ' . $this->_byQuery($target, false) . ';';
+		$lines[] = "    {$this->_obj}->assertTrue(!\$element || !\$element->displayed());";
+		$lines[] = "} catch (Exception \$e) {";
+		$lines[] = "    echo \"Could not find element `$target`: {\$e->getMessage()}\";";
+		$lines[] = "}";
 		return $lines;
 	}
 

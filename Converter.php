@@ -258,7 +258,7 @@ class Converter {
 		}
 		$methodContent = $this->_composeStr($lines);
 		// Match variables
-		$re = '/(\\${[a-zA-Z_]*\\})/';
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
 		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
 		preg_match_all($re, $methodContent, $matches);
 		if (count($matches) > 0) {

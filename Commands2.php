@@ -39,7 +39,9 @@ class Commands2 {
 	 */
 	public $overrideSeleniumParams = array();
 	protected $_obj = '$this';
+	protected $_confirm = true;
 	public $stepCount = 1;
+	public $waitInMilliseconds = 30000;
 
 	/**
 	 * 
@@ -113,19 +115,19 @@ class Commands2 {
 					return $this->byId($match[2], $wait);
 					break;
 				case 'name':
-					return $this->byName($match[2]);
+					return $this->byName($match[2], $wait);
 					break;
 				case 'link':
-					return $this->byLinkText($match[2]);
+					return $this->byLinkText($match[2], $wait);
 					break;
 				case 'xpath':
 					// Remove trailing slash
 					$match[2] = rtrim($match[2], '/');
-					return $this->byXPath($match[2]);
+					return $this->byXPath($match[2], $wait);
 					break;
 				case 'css':
 					$cssSelector = str_replace('..', '.', $match[2]);
-					return $this->byCssSelector($cssSelector);
+					return $this->byCssSelector($cssSelector, $wait);
 					break;
 			}
 		}
@@ -158,48 +160,48 @@ class Commands2 {
 	 * By Name
 	 * @param string $selector
 	 */
-	public function byName($selector) {
+	public function byName($selector, $wait = true) {
 		// By Name (wait for element)
-		return "{$this->_obj}->byName(\"{$selector}\", true)";
+		return "{$this->_obj}->byName(\"{$selector}\", " . ($wait ? 'true' : 'false') . ")";
 	}
 
 	/**
 	 * By css
 	 * @param string $selector
 	 */
-	public function byCssSelector($selector) {
+	public function byCssSelector($selector, $wait = true) {
 		// By css (wait for element)
-		return "{$this->_obj}->byCssSelector(\"{$selector}\", true)";
+		return "{$this->_obj}->byCssSelector(\"{$selector}\", " . ($wait ? 'true' : 'false') . ")";
 	}
 
 	/**
 	 * byXPath
 	 * @param string $selector
 	 */
-	public function byXPath($selector) {
+	public function byXPath($selector, $wait = true) {
 		// By XPath (wait for element)
-		return "{$this->_obj}->byXPath(\"{$selector}\", true)";
+		return "{$this->_obj}->byXPath(\"{$selector}\", " . ($wait ? 'true' : 'false') . ")";
 	}
 
 	/**
 	 * byLinkText
 	 * @param string $selector
 	 */
-	public function byLinkText($selector) {
+	public function byLinkText($selector, $wait = true) {
 		// By LinkText (wait for element)
-		return "{$this->_obj}->byLinkText(\"{$selector}\", true)";
+		return "{$this->_obj}->byLinkText(\"{$selector}\", " . ($wait ? 'true' : 'false') . ")";
 	}
 
 	public function click($selector) {
 		$lines = array();
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->click();';
-		
-		// If we got a dialog; simply confirm it
-		$lines[] = 'try {';
-		$lines[] = '    ' . $this->_obj . '->acceptAlert();';
-		$lines[] = '} catch (Exception $e) { // Do not care; the link may not produce a dialog';
-		$lines[] = '}';
+//		
+//		// If we got a dialog; simply confirm it
+//		$lines[] = 'try {';
+//		$lines[] = '    ' . $this->_obj . '->acceptAlert();';
+//		$lines[] = '} catch (Exception $e) { // Do not care; the link may not produce a dialog';
+//		$lines[] = '}';
 		return $lines;
 	}
 
@@ -295,7 +297,7 @@ class Commands2 {
 	 */
 	public function assertText($target, $value) {
 		$lines = array();
-		$lines[] = '$input = ' . $this->_byQuery($target) . ';';
+		$lines[] = '$input = ' . $this->_byQuery($target, false) . ';';
 
 		if (strpos($value, '*')) {
 			$value = '/' . str_replace('*', '.+', $value) . '/';
@@ -315,7 +317,7 @@ class Commands2 {
 	 */
 	public function assertNotText($target, $value) {
 		$lines = array();
-		$lines[] = '$input = ' . $this->_byQuery($target) . ';';
+		$lines[] = '$input = ' . $this->_byQuery($target, false) . ';';
 
 		if (strpos($value, '*')) {
 			$value = '/' . str_replace('*', '.+', $value) . '/';
@@ -335,7 +337,7 @@ class Commands2 {
 	public function assertElementPresent($target) {
 		$lines = array();
 		$lines[] = 'try {';
-		$lines[] = "    " . $this->_byQuery($target) . ';';
+		$lines[] = "    " . $this->_byQuery($target, false) . ';';
 		$lines[] = "    {$this->_obj}->assertTrue(true);";
 		$lines[] = '} catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
 		$lines[] = "    if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement === \$e->getCode()) {";
@@ -355,7 +357,7 @@ class Commands2 {
 	public function assertElementNotPresent($target) {
 		$lines = array();
 		$lines[] = 'try {';
-		$lines[] = "    " . $this->_byQuery($target) . ';';
+		$lines[] = "    " . $this->_byQuery($target, false) . ';';
 		$lines[] = "    {$this->_obj}->assertTrue(false, \"Element $target was found\");";
 		$lines[] = '} catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
 		$lines[] = "    {$this->_obj}->assertEquals(PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement, \$e->getCode());";
@@ -369,7 +371,7 @@ class Commands2 {
 	 * @return array
 	 */
 	public function waitForElementPresent($target) {
-		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 
 		/*
 		 * In Selenium 2 we can not interact with invisible elements.
@@ -383,22 +385,25 @@ class Commands2 {
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';
-		$lines[] = '}, 30000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
 	public function waitForElementNotPresent($target) {
-		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
-		$lines[] = "        $localExpression;";
+		$lines[] = "        \$element = $localExpression;";
+		$lines[] = "        if ( ! (\$element && \$element->displayed())) {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
 		$lines[] = '    } catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
 		$lines[] = "        if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement == \$e->getCode()) {";
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    }';
-		$lines[] = '}, 30000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
@@ -408,7 +413,7 @@ class Commands2 {
 	 * @return array
 	 */
 	public function waitForVisible($target) {
-		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 
 		/*
 		 * In Selenium 2 we can not interact with invisible elements.
@@ -422,12 +427,12 @@ class Commands2 {
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';
-		$lines[] = '}, 30000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
 	public function waitForNotVisible($target) {
-		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
@@ -437,7 +442,7 @@ class Commands2 {
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    }';
-		$lines[] = '}, 30000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
@@ -454,7 +459,7 @@ class Commands2 {
 		$lines[] = "    if (strpos(\$testCase->byTag('body')->text(), \"$text\") !== false) {";
 		$lines[] = "         return true;";
 		$lines[] = '    }';
-		$lines[] = '}, 8000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
@@ -596,23 +601,23 @@ class Commands2 {
 	}
 
 	public function waitForText($target, $value) {
-		$localExpression = '$input = ' . str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$localExpression = '$input = ' . str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    $localExpression;";
 		$lines[] = "    if (('$value' === '' && \$input->text() === '') || strpos(\$input->text(), \"$value\") !== false) {";
 		$lines[] = "         return true;";
 		$lines[] = '    }';
-		$lines[] = '}, 8000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
 	public function waitForNotText($target, $value) {
-		$localExpression = '$input = ' . str_replace($this->_obj, '$testCase', $this->_byQuery($target));
+		$localExpression =  str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
-		$lines[] = "        $localExpression;";
+		$lines[] = "        \$input = {$localExpression};";
 		$lines[] = "        if (('$value' === '' && \$input->text() !== '') || strpos(\$input->text(), \"$value\") === false) {";
 		$lines[] = "            return true;";
 		$lines[] = '        }';
@@ -621,12 +626,26 @@ class Commands2 {
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    }';
-		$lines[] = '}, 8000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}
 
 	public function assertConfirmation($text) {
-		return $this->assertAlert($text);
+		$lines = array();
+		$lines[] = "if ( !is_null(\$alertText = {$this->_obj}->alertText()) ) {";
+		$lines[] = "    {$this->_obj}->assertEquals(\"$text\", \$alertText);";
+		$lines[] = "}";
+		$lines[] = $this->_obj . '->' . (($this->_confirm) ? 'accept' : 'dismiss') . 'Alert();';
+		return $lines;
+	}
+
+	public function assertNotConfirmation($text) {
+		$lines = array();
+		$lines[] = "if ( !is_null(\$alertText = {$this->_obj}->alertText()) ) {";
+		$lines[] = "    {$this->_obj}->assertNotEquals(\"$text\", \$alertText);";
+		$lines[] = "}";
+		$lines[] = $this->_obj . '->' . (($this->_confirm) ? 'accept' : 'dismiss') . 'Alert();';
+		return $lines;
 	}
 
 	public function assertAlert($text) {
@@ -639,8 +658,23 @@ class Commands2 {
 	}
 
 	public function runScript($script) {
+		$script = str_replace(array('$', '\${'), array('\$', '${'), $script);
+
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
+		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
+		preg_match_all($re, $script, $matches);
+		if (count($matches) > 0) {
+			$search = $replace = [];
+			$matchList = reset($matches);
+			foreach ($matchList as $match) {
+				$search[] = $match;
+				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
+			}
+		}
+		$script = str_replace($search, $replace, $script);
+		
 		$lines = array();
-		$lines[] = "\$script = \"$script\";";
+		$lines[] = "\$script = \"{$script}\";";
 		$lines[] = "\$result = {$this->_obj}->runJavascript([\$script]);";
 		return $lines;
 	}
@@ -664,7 +698,7 @@ class Commands2 {
 	 * @return string
 	 */
 	public function assertAttribute($target, $value) {
-		$line = "{$this->_obj}->assertEquals(\"$value\", " . $this->_getAttributeByLocator($target) . ');';
+		$line = "{$this->_obj}->assertEquals(\"$value\", " . $this->_getAttributeByLocator($target, false) . ');';
 		return $line;
 	}
 
@@ -674,7 +708,7 @@ class Commands2 {
 	 * @param string $locator - locator ending with @attr. For example css=.some-link@href
 	 * @return string expression
 	 */
-	protected function _getAttributeByLocator($locator) {
+	protected function _getAttributeByLocator($locator, $wait = true) {
 		/*
 		 * We dont have a $this->getAttribute($locator)
 		 */
@@ -684,7 +718,7 @@ class Commands2 {
 		$elementTarget = preg_replace('/(.+@?)\/?@([\S]+)$/', '$1', $locator);
 		$attribute = preg_replace('/(.+@?)\/?@([\S]+)$/', '$2', $locator);
 		$attribute = str_replace("'", "\'", $attribute);
-		$line = $this->_byQuery($elementTarget) . "->attribute('$attribute')";
+		$line = $this->_byQuery($elementTarget, $wait) . "->attribute('$attribute')";
 		return $line;
 	}
 
@@ -706,7 +740,6 @@ class Commands2 {
 		$lines = array();
 		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
 		$lines[] = "{$this->_obj}->store(\"$varName\", \$element->text());";
-		$lines[] = "echo(\$element->text());";
 		return $lines;
 	}
 
@@ -746,7 +779,7 @@ class Commands2 {
 	 */
 	public function assertVisible($target) {
 		$lines = array();
-		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
+		$lines[] = '$element = ' . $this->_byQuery($target, false) . ';';
 		$lines[] = "{$this->_obj}->assertTrue(\$element && \$element->displayed());";
 		return $lines;
 	}
@@ -785,7 +818,7 @@ class Commands2 {
 	 */
 	public function storeLocation($varName) {
 		$this->_checkVarName($varName);
-		$line = "{$this->_obj}->store(\"$varName\", {$this->_obj}->url();";
+		$line = "{$this->_obj}->store(\"$varName\", {$this->_obj}->url());";
 		return $line;
 	}
 
@@ -825,7 +858,7 @@ class Commands2 {
 	public function waitForLocation($target) {
 		$localExpression = str_replace($this->_obj, '$testCase', "{$this->_obj}->url()");
 
-		$re = '/(\\${[a-zA-Z_]*\\})/';
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
 		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
 		preg_match_all($re, $target, $matches);
 		if (count($matches) > 0) {
@@ -846,8 +879,155 @@ class Commands2 {
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';
-		$lines[] = '}, 30000);';
+		$lines[] = "}, {$this->waitInMilliseconds});";
+		return $lines;
+	}
+	
+	public function chooseOkOnNextConfirmation() {
+		$this->_confirm = true;
+	}
+	
+	public function chooseOkOnNextConfirmationAndWait() {
+		$this->chooseOkOnNextConfirmation();
+	}
+	
+	public function  chooseCancelOnNextConfirmation() {
+		$this->_confirm = false;
+	}
+	
+	public function storeConfirmation($varName) {
+		$this->_checkVarName($varName);
+		$lines[] = 'try {';
+		$lines[] = "    {$this->_obj}->store(\"$varName\", {$this->_obj}->alertText());";		
+		$lines[] = '    ' . $this->_obj . '->' . (($this->_confirm) ? 'accept' : 'dismiss') . 'Alert();';
+		$lines[] = '} catch (Exception $e) {';
+		$lines[] = "    echo \"Could not get expected confirmation: {\$e->getMessage()}\";";
+		$lines[] = '}';
 		return $lines;
 	}
 
+	public function storeAlert($varName) {
+		$this->_checkVarName($varName);
+		$lines[] = 'try {';
+		$lines[] = "    {$this->_obj}->store(\"$varName\", {$this->_obj}->alertText());";		
+		$lines[] = '    ' . $this->_obj . '->acceptAlert();';
+		$lines[] = '} catch (Exception $e) {';
+		$lines[] = "    echo \"Could not get expected alert: {\$e->getMessage()}\";";
+		$lines[] = '}';
+		return $lines;
+	}
+	
+	public function assertTitle($value) {
+		if (strpos($value, '*')) {
+			$value = '/' . str_replace('*', '.+', $value) . '/';
+			$lines[] = "{$this->_obj}->assertRegExp(\"$value\", {$this->_obj}->title());";
+		} else {
+			$lines[] = "{$this->_obj}->assertEquals(\"$value\", {$this->_obj}->title());";
+		}
+
+		return $lines;		
+	}
+	
+	public function assertNotTitle($value) {
+		if (strpos($value, '*')) {
+			$value = '/' . str_replace('*', '.+', $value) . '/';
+			$lines[] = "{$this->_obj}->assertNotRegExp(\"$value\", {$this->_obj}->title());";
+		} else {
+			$lines[] = "{$this->_obj}->assertNotEquals(\"$value\", {$this->_obj}->title());";
+		}
+
+		return $lines;		
+	}
+	
+	public function assertValue($target, $value) {
+		$lines = array();
+		$lines[] = 'try {';
+		$lines[] = '    $input = ' . $this->_byQuery($target, false) . ';';
+		if (strpos($value, '*')) {
+			$value = '/' . str_replace('*', '.+', $value) . '/';
+			$lines[] = "    {$this->_obj}->assertRegExp(\"$value\", \$input->value());";
+		} else {
+			$lines[] = "    {$this->_obj}->assertEquals(\"$value\", \$input->value());";
+		}
+		$lines[] = '} catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
+		$lines[] = "    if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement === \$e->getCode()) {";
+		$lines[] = "        {$this->_obj}->assertTrue(false, \"Element $target not found\");";
+		$lines[] = "    } else { ";
+		$lines[] = "        throw \$e;";
+		$lines[] = "    }";
+		$lines[] = '}';
+		return $lines;
+	}
+	
+	public function verifyValue($target, $value) {
+		return $this->assertValue($target, $value);
+	}
+	
+	public function waitForXpathCount($target, $count) {
+		/*
+		 * In Selenium 2 we can not interact with invisible elements.
+		 */
+		// For non-numeric values: Escape
+		if (!is_numeric($count)) {
+			$count = '"' . $count . '"';
+		}
+		
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
+		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
+		preg_match_all($re, $count, $matches);
+		if (count($matches) > 0) {
+			$search = $replace = [];
+			$matchList = reset($matches);
+			foreach ($matchList as $match) {
+				$search[] = $match;
+				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
+			}
+		}
+		$localValue = str_replace($search, $replace, $count);
+
+		$lines = array();
+		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = '    try {';
+		$lines[] = "        if ({$localValue} == \$testCase->xPathCount(\"{$target}\")) {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
+		$lines[] = '    } catch (Exception $e) {}';
+		$lines[] = "}, {$this->waitInMilliseconds});";
+		return $lines;
+	}
+	
+	public function waitForValue($target, $value) {
+		/*
+		 * In Selenium 2 we can not interact with invisible elements.
+		 */
+		// For non-numeric values: Escape
+		if (!is_numeric($value)) {
+			$value = '"' . $value . '"';
+		}
+		
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
+		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
+		preg_match_all($re, $value, $matches);
+		if (count($matches) > 0) {
+			$search = $replace = [];
+			$matchList = reset($matches);
+			foreach ($matchList as $match) {
+				$search[] = $match;
+				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
+			}
+		}
+		$localValue = str_replace($search, $replace, $value);
+
+		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
+		$lines = array();
+		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = '    try {';
+		$lines[] = "        \$input = {$localExpression};";
+		$lines[] = "        if ({$localValue} == \$input->value()) {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
+		$lines[] = '    } catch (Exception $e) {}';
+		$lines[] = "}, {$this->waitInMilliseconds});";
+		return $lines;
+	}
 }

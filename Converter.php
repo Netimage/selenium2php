@@ -30,6 +30,7 @@ use Zend_Config_Ini;
 class Converter {
 
 	protected $_testName = '';
+	protected $_lastTestName = '';
 	protected $_testUrl = '';
 	protected $_defaultTestName = 'some';
 	protected $_defaultTestUrl = 'http://example.com';
@@ -69,13 +70,13 @@ class Converter {
 	 * @var boolean
 	 */
 	public $browserstackLocal = false;
-	
+
 	/**
 	 *
 	 * @var string
 	 */
 	public $browserstackLocalIdentifier = false;
-	
+
 	/**
 	 *
 	 * @var string
@@ -155,9 +156,9 @@ class Converter {
 					$value = $row->find('td', 2)->innertext;
 
 					$this->_commands[] = array(
-						'command'	 => $command,
-						'target'	 => $target,
-						'value'		 => $value
+						'command' => $command,
+						'target' => $target,
+						'value' => $value
 					);
 				}
 			}
@@ -201,15 +202,16 @@ class Converter {
 		$this->_parseHtml($htmlStr);
 		if ($tplFile) {
 			if (is_file($tplFile)) {
-				return $this->_convertToTpl($tplFile);
+				$content = $this->_convertToTpl($tplFile);
 			} else {
 				echo "Template file $tplFile is not accessible.";
 				exit;
 			}
 		} else {
 			$lines = $this->_composeLines($functionOnly);
-			return $this->_composeStrWithIndents($lines, 4);
+			$content = $this->_composeStrWithIndents($lines, 4);
 		}
+		return $content;
 	}
 
 	public function convertSuite($htmlStr, $testName = '', $tplFile = '', $suitePath = '') {
@@ -279,20 +281,24 @@ class Converter {
 	 */
 	protected function _convertToTpl($tplFile, $testMethodContent = null) {
 		$tpl = file_get_contents($tplFile);
+		$testMethodName = $testMethodContent ? 'noop' : $this->_composeTestMethodName();
 		$replacements = array(
-			'{$comment}'			 => $this->_composeComment(),
-			'{$className}'			 => $this->_composeClassName(),
-			'{$browser}'			 => $this->_browser,
-			'{$testUrl}'			 => $this->_testUrl ? $this->_testUrl : $this->_defaultTestUrl,
-			'{$remoteHost}'			 => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
-			'{$remotePort}'			 => $this->_remotePort ? $this->_remotePort : '4444',
-			'{$testMethodName}'		 => $testMethodContent ? 'noop' : $this->_composeTestMethodName(),
-			'{$testMethodContent}'	 => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
-			'{$testMethods}'		 => $testMethodContent,
-			'{$customParam1}'		 => $this->_tplCustomParam1,
-			'{$customParam2}'		 => $this->_tplCustomParam2,
-			'{$browsers}'			 => $this->_createBrowsers()
+			'{$comment}' => $this->_composeComment(),
+			'{$className}' => $this->_composeClassName(),
+			'{$browser}' => $this->_browser,
+			'{$testUrl}' => $this->_testUrl ? $this->_testUrl : $this->_defaultTestUrl,
+			'{$remoteHost}' => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
+			'{$remotePort}' => $this->_remotePort ? $this->_remotePort : '4444',
+			'{$testMethodName}' => $testMethodName,
+			'{$testMethodContent}' => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
+			'{$testMethods}' => $testMethodContent,
+			'{$customParam1}' => $this->_tplCustomParam1,
+			'{$customParam2}' => $this->_tplCustomParam2,
+			'{$browsers}' => $this->_createBrowsers()
 		);
+		if ($this->_lastTestName != $testMethodName) {
+			$replacements['{$depends}'] = '@depends ' . $this->_lastTestName;
+		}
 		foreach ($replacements as $s => $r) {
 			$tpl = str_replace($s, $r, $tpl);
 		}
@@ -310,8 +316,8 @@ class Converter {
 			return '';
 		}
 		$capabilities = $this->_createArrayParam('project', $this->_projectName) .
-		$this->_createArrayParam('build', $this->_projectBuild) .
-		$this->_createArrayParam('name', $this->_testName);
+				$this->_createArrayParam('build', $this->_projectBuild) .
+				$this->_createArrayParam('name', $this->_testName);
 		if (intval($this->browserstackLocal)) {
 			$capabilities .= $this->_createArrayParam('browserstack.local', (bool) $this->browserstackLocal);
 			if ($this->browserstackLocalIdentifier) {
@@ -423,21 +429,27 @@ class Converter {
 			$lines[] = $functionContent;
 		} else {
 			$methodName = $this->_composeTestMethodName();
+			if ($this->_lastTestName && $this->_lastTestName != $methodName) {
+				$lines[] = $this->_indent(4) . "/**";
+				$lines[] = $this->_indent(4) . "* @depends " . $this->_lastTestName;
+				$lines[] = $this->_indent(4) . "*/";
+			}
 			$lines[] = $this->_indent(4) . "function " . $methodName . "() {";
 			$lines[] = $this->_indent(4) . "\$this->log('Running {$methodName}');";
-			
+
 			$lines[] = $this->_indent(4) . 'try {';
 
 			foreach ($this->_composeTestMethodContent() as $mLine) {
 				$lines[] = $this->_indent(8) . $mLine;
 			}
-			
+
 			$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
 			$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with message `" . $e->getMessage() . "\n" . $e->getTraceAsString());';
 			$lines[] = $this->_indent(4) . '}';
-			
+
 			$lines[] = "}";
 			$lines[] = "";
+			$this->_lastTestName = $methodName;
 		}
 		if (!$functionOnly) {
 			$lines[] = "}";
@@ -459,7 +471,7 @@ class Converter {
 			$return = $methodName . sprintf('%03d', (sizeof($this->methodNames[$methodName]) + 1));
 		}
 		$this->methodNames[$methodName][] = $return;
-		
+
 		return $return;
 	}
 

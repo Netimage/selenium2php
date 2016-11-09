@@ -30,7 +30,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 	protected function failedTest () {
 		// No extra action -> just continue
 	}
-	
+
 	public function {$testMethodName}() {
  		try {
 			{$testMethodContent}

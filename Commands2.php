@@ -807,8 +807,14 @@ class Commands2 {
 	 * @return string Expression
 	 */
 	public function assertLocation($target) {
-		$line = "{$this->_obj}->assertEquals(\"{$target}\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
-		return $line;
+		$lines = array();
+		if (mb_strpos($target, '*') > 0) {
+			$lines[] = "\$target = str_replace(array('/', '.', '*'), array('\/', '\.', '.*'), \"{$target}\");";
+			$lines[] = "{$this->_obj}->assertRegExp(\"/{\$target}/\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
+		} else {
+			$lines[] = "{$this->_obj}->assertEquals(\"{$target}\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
+		}
+		return $lines;
 	}
 
 	/**

@@ -444,7 +444,7 @@ class Converter {
 			}
 
 			$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
-			$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with message `" . $e->getMessage() . "\n" . $e->getTraceAsString());';
+			$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with exception\n" . print_r($e, true));';
 			$lines[] = $this->_indent(4) . '}';
 
 			$lines[] = "}";

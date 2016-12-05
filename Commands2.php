@@ -819,6 +819,22 @@ class Commands2 {
 
 	/**
 	 * 
+	 * @param string $target
+	 * @return string Expression
+	 */
+	public function assertNotLocation($target) {
+		$lines = array();
+		if (mb_strpos($target, '*') > 0) {
+			$lines[] = "\$target = str_replace(array('/', '.', '*'), array('\/', '\.', '.*'), \"{$target}\");";
+			$lines[] = "{$this->_obj}->assertNotRegExp(\"/{\$target}/\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
+		} else {
+			$lines[] = "{$this->_obj}->assertNotEquals(\"{$target}\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
+		}
+		return $lines;
+	}
+
+	/**
+	 * 
 	 * @param string $varName
 	 * @return string Expression
 	 */

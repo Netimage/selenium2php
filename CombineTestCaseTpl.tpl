@@ -18,7 +18,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 	public function setUp() {
 		$this->usePluginService = false;
 		if (!self::$first) {
-			self::shareSession(true);
+			self::shareSession(false);
 			self::$first = true;
 			$this->store('var_EMAIL', 'dk.combine.qa+sys-03-01-' . uniqid() . '@gmail.com');
 		}

@@ -84,6 +84,12 @@ class Converter {
 	public $singleTest = false;
 
 	/**
+	 * Should we record video of the session?
+	 * @var bool
+	 */
+	public $video = true;
+
+	/**
 	 *
 	 * @var string
 	 */
@@ -323,6 +329,10 @@ class Converter {
 			if ($this->browserstackLocalIdentifier) {
 				$capabilities .= $this->_createArrayParam('browserstack.localIdentifier', $this->browserstackLocalIdentifier);
 			}
+		}
+
+		if (!$this->video) {
+			$capabilities .= $this->_createArrayParam('browserstack.video', 'false');
 		}
 
 		$template = "array(

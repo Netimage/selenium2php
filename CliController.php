@@ -87,6 +87,7 @@ class CliController {
 		print "  --screenshotsOnEveryStep=<value> Take screenshots on every `click` or `open` event in the test\n";
 		print "  --browserstackLocal=<value>	Execute local testing from BrowserStack\n";
 		print "  --browserstackLocalIdentifier=<value>	Specify a local identifier (if any)\n";
+		print "  --video=<value>				Record video(1|0)\n";
 		print "  --override-selenium-params=<key,value\$key,value...>	Specify a list of stores parameters to always override. E.g var_ORIGIN,http://localhost\n";
 	}
     
@@ -174,6 +175,9 @@ class CliController {
 							if (isset($opt[1])) {
 								$this->_converter->overrideSeleniumParams = $opt[1];
 							}
+							break;
+						case 'video':
+							$this->_converter->video = $opt[1] == 'false' || $opt[1] == '0' ? false : true;
 							break;
 						case 'single-test':
 							if (isset($opt[1])) {

@@ -896,11 +896,25 @@ class Commands2 {
 		}
 		$localValue = str_replace($search, $replace, $target);
 
+		// Wildcard support
+		if (stripos($target, '*') !== false) {
+
+			$compareLine = <<<COMP
+		\$localValueEscaped = preg_quote("{$localValue}", "/");
+        \$localValueReplaced = '/' . str_replace('\*', '.*', \$localValueEscaped) . '\$/';
+		\$matches = [];
+		if (preg_match_all(\$localValueReplaced, \$url, \$matches) > 0) {
+COMP;
+"        if (\$url === \"{$localValue}\") {";
+		} else {
+			$compareLine = "if (\$url === \"{$localValue}\") {";
+		}
+
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$url = {$localExpression};";
-		$lines[] = "        if (\$url === \"{$localValue}\") {";
+		$lines[] = "        $compareLine";
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';

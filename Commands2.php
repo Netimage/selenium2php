@@ -436,7 +436,10 @@ class Commands2 {
 		$lines = array();
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
-		$lines[] = "        $localExpression;";
+		$lines[] = "        \$element = $localExpression;";
+		$lines[] = "        if ( ! (\$element && \$element->displayed())) {";
+		$lines[] = "            return true;";
+		$lines[] = "        }";
 		$lines[] = '    } catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
 		$lines[] = "        if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement == \$e->getCode()) {";
 		$lines[] = "            return true;";

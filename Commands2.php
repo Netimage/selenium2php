@@ -401,8 +401,12 @@ class Commands2 {
 		$lines[] = '    } catch (PHPUnit_Extensions_Selenium2TestCase_WebDriverException $e) {';
 		$lines[] = "        if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement == \$e->getCode()) {";
 		$lines[] = "            return true;";
+		$lines[] = "        } else {";
+		$lines[] = "            \$this->fail(\"Unexpected exception: \" . print_r(\$e, true));";
 		$lines[] = "        }";
-		$lines[] = '    }';
+		$lines[] = "    } catch (Exception \$e) {";
+		$lines[] = "        \$this->fail(\"Unexpected exception: \" . print_r(\$e, true));";
+		$lines[] = "    }";
 		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}

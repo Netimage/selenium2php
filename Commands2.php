@@ -74,6 +74,7 @@ class Commands2 {
 
 	public function type($selector, $value) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Typing $selector : $value\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->clear();';
 		$lines[] = '$input->value("' . $value . '");';
@@ -92,6 +93,7 @@ class Commands2 {
 	 */
 	public function sendKeys($selector, $value) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Sending keys $selector : $value\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->value("' . $value . '");';
 		return $lines;
@@ -194,6 +196,7 @@ class Commands2 {
 
 	public function click($selector) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Click on  $selector\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->click();';
 //		
@@ -207,6 +210,7 @@ class Commands2 {
 
 	public function select($selectSelector, $optionSelector) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Select element $selectSelector : $optionSelector\");";
 		$lines[] = '$element = ' . $this->_byQuery($selectSelector) . ';';
 		$lines[] = '$selectElement = ' . $this->_obj . '->select($element);';
 
@@ -248,6 +252,7 @@ class Commands2 {
 	 */
 	public function verifyLocation($target) {
 		$lines = [];
+		$lines[] = "\$this->log(\"Waiting for $target\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        // Wait for location";
@@ -261,6 +266,7 @@ class Commands2 {
 
 	public function captureEntirePageScreenshot($target) {
 		$lines = [];
+		$lines[] = "\$this->log(\"Taking screenshot\");";
 		if (mb_strlen(trim($target)) > 0) {
 			$filename = $target;
 			if ($pos = mb_strripos($filename, '/')) {
@@ -297,6 +303,7 @@ class Commands2 {
 	 */
 	public function assertText($target, $value) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert text $target = $value\");";
 		$lines[] = '$input = ' . $this->_byQuery($target, false) . ';';
 
 		if (strpos($value, '*')) {
@@ -317,6 +324,7 @@ class Commands2 {
 	 */
 	public function assertNotText($target, $value) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert not text $target = $value\");";
 		$lines[] = '$input = ' . $this->_byQuery($target, false) . ';';
 
 		if (strpos($value, '*')) {
@@ -336,6 +344,7 @@ class Commands2 {
 	 */
 	public function assertElementPresent($target) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert element present $target\");";
 		$lines[] = 'try {';
 		$lines[] = "    " . $this->_byQuery($target, false) . ';';
 		$lines[] = "    {$this->_obj}->assertTrue(true);";
@@ -356,6 +365,7 @@ class Commands2 {
 	 */
 	public function assertElementNotPresent($target) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert element not present $target\");";
 		$lines[] = 'try {';
 		$lines[] = "    " . $this->_byQuery($target, false) . ';';
 		$lines[] = "    {$this->_obj}->assertTrue(false, \"Element $target was found\");";
@@ -371,6 +381,7 @@ class Commands2 {
 	 * @return array
 	 */
 	public function waitForElementPresent($target) {
+
 		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 
 		/*
@@ -378,6 +389,7 @@ class Commands2 {
 		 */
 
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for element $target\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$element = $localExpression;";
@@ -392,6 +404,7 @@ class Commands2 {
 	public function waitForElementNotPresent($target) {
 		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for element not present $target\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
 		$lines[] = "        \$element = $localExpression;";
@@ -424,6 +437,7 @@ class Commands2 {
 		 */
 
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for visible $target\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$element = $localExpression;";
@@ -438,6 +452,7 @@ class Commands2 {
 	public function waitForNotVisible($target) {
 		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for not visible $target\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
 		$lines[] = "        \$element = $localExpression;";
@@ -462,6 +477,7 @@ class Commands2 {
 	public function waitForTextPresent($text) {
 		$this->_addNote('Deprecated command', 'waitForTextPresent', $text);
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for text $text\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    if (strpos(\$testCase->byTag('body')->text(), \"$text\") !== false) {";
 		$lines[] = "         return true;";
@@ -610,6 +626,7 @@ class Commands2 {
 	public function waitForText($target, $value) {
 		$localExpression = '$input = ' . str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for text $target = $value\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    $localExpression;";
 		$lines[] = "    if (('$value' === '' && \$input->text() === '') || strpos(\$input->text(), \"$value\") !== false) {";
@@ -622,6 +639,7 @@ class Commands2 {
 	public function waitForNotText($target, $value) {
 		$localExpression =  str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for not text $target = $value\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    try {";
 		$lines[] = "        \$input = {$localExpression};";
@@ -681,6 +699,7 @@ class Commands2 {
 		$script = str_replace($search, $replace, $script);
 		
 		$lines = array();
+		$lines[] = "\$this->log(\"Running script $script\");";
 		$lines[] = "\$script = \"{$script}\";";
 		$lines[] = "\$result = {$this->_obj}->runJavascript([\$script]);";
 		return $lines;
@@ -786,6 +805,7 @@ class Commands2 {
 	 */
 	public function assertVisible($target) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert visible $target\");";
 		$lines[] = '$element = ' . $this->_byQuery($target, false) . ';';
 		$lines[] = "{$this->_obj}->assertTrue(\$element && \$element->displayed());";
 		return $lines;
@@ -799,6 +819,7 @@ class Commands2 {
 	public function assertNotVisible($target) {
 		$lines = array();
 		// By query; do not wait for element to be visible
+		$lines[] = "\$this->log(\"Assert not visible $target\");";
 		$lines[] = "try {";
 		$lines[] = '    $element = ' . $this->_byQuery($target, false) . ';';
 		$lines[] = "    {$this->_obj}->assertTrue(!\$element || !\$element->displayed());";
@@ -815,6 +836,7 @@ class Commands2 {
 	 */
 	public function assertLocation($target) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert location $target\");";
 		if (mb_strpos($target, '*') > 0) {
 			$lines[] = "\$target = str_replace(array('/', '.', '*'), array('\/', '\.', '.*'), \"{$target}\");";
 			$lines[] = "{$this->_obj}->assertRegExp(\"/{\$target}/\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
@@ -831,6 +853,7 @@ class Commands2 {
 	 */
 	public function assertNotLocation($target) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert not location $target\");";
 		if (mb_strpos($target, '*') > 0) {
 			$lines[] = "\$target = str_replace(array('/', '.', '*'), array('\/', '\.', '.*'), \"{$target}\");";
 			$lines[] = "{$this->_obj}->assertNotRegExp(\"/{\$target}/\", {$this->_obj}->url(), \"Failed to assert equal '{$target}' to '{{$this->_obj}->url()}'\");";
@@ -915,6 +938,7 @@ COMP;
 		}
 
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for location $target\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$url = {$localExpression};";
@@ -984,6 +1008,7 @@ COMP;
 	
 	public function assertValue($target, $value) {
 		$lines = array();
+		$lines[] = "\$this->log(\"Assert value $target = $value\");";
 		$lines[] = 'try {';
 		$lines[] = '    $input = ' . $this->_byQuery($target, false) . ';';
 		if (strpos($value, '*')) {
@@ -1029,6 +1054,7 @@ COMP;
 		$localValue = str_replace($search, $replace, $count);
 
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for xpath count " . addslashes($target) . " = " . addslashes($count) . "\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        if ({$localValue} == \$testCase->xPathCount(\"{$target}\")) {";
@@ -1063,6 +1089,7 @@ COMP;
 
 		$localExpression = str_replace($this->_obj, '$testCase', $this->_byQuery($target, false));
 		$lines = array();
+		$lines[] = "\$this->log(\"Wait for value $target = $value\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$input = {$localExpression};";

@@ -310,7 +310,8 @@ class Commands2 {
 			$value = '/' . str_replace('*', '.+', $value) . '/';
 			$lines[] = "{$this->_obj}->assertRegExp(\"$value\", \$input->text());";
 		} else {
-			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \$input->text(), \"Failed to assert equal '{$value}' to '{\$input->text()}'\");";
+			// Ignore case (last param)
+			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \$input->text(), \"Failed to assert equal '{$value}' to '{\$input->text()}'\", 0.0, 10, false, true);";
 		}
 
 		return $lines;

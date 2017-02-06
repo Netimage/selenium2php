@@ -978,7 +978,7 @@ COMP;
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = "    \$testCase->log(\"Wait for location $localValue\");";
 		$lines[] = '    try {';
-		$lines[] = "        \$url = {$localExpression};";
+		$lines[] = "        \$url = \$testCase->removeBasicAuthFromUrl({$localExpression});";
 		$lines[] = "        $compareLine";
 		$lines[] = "            return true;";
 		$lines[] = "        }";

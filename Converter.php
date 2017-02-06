@@ -31,6 +31,7 @@ class Converter {
 
 	protected $_testName = '';
 	protected $_lastTestName = '';
+	protected $_testIndex = 0;
 	protected $_testUrl = '';
 	protected $_defaultTestName = 'some';
 	protected $_defaultTestUrl = 'http://example.com';
@@ -445,6 +446,7 @@ class Converter {
 				$lines[] = $this->_indent(4) . "*/";
 			}
 			$lines[] = $this->_indent(4) . "function " . $methodName . "() {";
+			$lines[] = $this->_indent(4) . "\$this->testIndex = {$this->_testIndex};";
 			$lines[] = $this->_indent(4) . "\$this->log('Running {$methodName}');";
 
 			$lines[] = $this->_indent(4) . 'try {';
@@ -463,6 +465,7 @@ class Converter {
 			$lines[] = "}";
 			$lines[] = "";
 			$this->_lastTestName = $methodName;
+			$this->_testIndex++;
 		}
 		if (!$functionOnly) {
 			$lines[] = "}";

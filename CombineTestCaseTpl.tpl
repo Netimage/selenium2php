@@ -15,6 +15,12 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 
 	public static $first = false;
 
+	/**
+	* The current test index
+	* @var integer
+	*/
+	protected $testIndex = 0;
+
 	public function setUp() {
 		// Because the blacklist is using the autoload (on class_exists) this will crash with the NIClass autoloader
 		// Therefore; we need to remove all blacklisted classes not on a proper include path
@@ -28,6 +34,7 @@ class {$className} extends NI_Test_PHPUnit_Selenium2BrowserStackTestCase {
 			$this->store('var_EMAIL', 'dk.combine.qa+sys-03-01-' . uniqid() . '@gmail.com');
 		}
 		$this->setBrowserUrl("{$testUrl}");
+		$this->prependScreenshotNumber = true;
 		// $this->currentBrowser = "chrome";
 		parent::setUp();
 	}

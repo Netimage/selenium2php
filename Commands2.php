@@ -203,6 +203,7 @@ class Commands2 {
 		$lines[] = "\$gotoUrlHref = false;";
 		$lines[] = "if (\$gotoUrl && !empty(\$gotoUrl->attribute('href'))) {";
 		$lines[] = "	\$gotoUrlHref = \$gotoUrl->attribute('href');";
+		$lines[] = "    \$gotoUrlHref = preg_replace('/([^:])(\/{2,})/', '$1/', \$gotoUrlHref);";
 		$lines[] = "}";
 		$lines[] = '$input->click();';
 

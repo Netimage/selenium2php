@@ -198,16 +198,20 @@ class Commands2 {
 		$lines = array();
 		$localExpression = str_replace($this->_obj, '$testCase', "{$this->_obj}->url()");
 		$lines[] = "\$this->log(\"Click on  $selector\");";
-		$lines[] = "\$gotoUrl = " . $this->_byQuery($selector) . ";";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
+		$lines[] = "\$gotoUrl = " . $this->_byQuery($selector) . ";";
+		$lines[] = "\$gotoUrlHref = false;";
+		$lines[] = "if (\$gotoUrl && !empty(\$gotoUrl->attribute('href'))) {";
+		$lines[] = "	\$gotoUrlHref = \$gotoUrl->attribute('href');";
+		$lines[] = "}";
 		$lines[] = '$input->click();';
 
-		$lines[] = "if (\$gotoUrl && !empty(\$gotoUrl->attribute('href'))) {";
-		$lines[] = "    \$this->log(\"Wait for location \" . \$gotoUrl->attribute('href'));";
-		$lines[] = "    " . $this->_obj . '->waitUntil(function($testCase) use ($gotoUrl) {';
+		$lines[] = "if (\$gotoUrlHref) {";
+		$lines[] = "    \$this->log(\"Wait for location \" . \$gotoUrlHref);";
+		$lines[] = "    " . $this->_obj . '->waitUntil(function($testCase) use ($gotoUrlHref) {';
 		$lines[] = '        try {';
 		$lines[] = "            \$url = {$localExpression};";
-		$lines[] = "            if (\$url == \$gotoUrl->attribute('href')) {";
+		$lines[] = "            if (\$url == \$gotoUrlHref) {";
 		$lines[] = "                return true;";
 		$lines[] = "            }";
 		$lines[] = '        } catch (Exception $e) {}';

@@ -938,7 +938,7 @@ class Commands2 {
 		$localExpression = str_replace($this->_obj, '$testCase', "{$this->_obj}->url()");
 
 		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
-		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
+		$replaceTemplate = '" . $testCase->getStoredUrlValue("[value]") . "';
 		preg_match_all($re, $target, $matches);
 		if (count($matches) > 0) {
 			$search = $replace = [];
@@ -952,11 +952,11 @@ class Commands2 {
 
 		// Any basic auth we need to filter out?
 		$re = '/(?<protocol>http[s]{0,1}:\/\/)(?<username>.*):(?<password>.*)@(?<url>.*)/';
-		$nbMatches = preg_match_all($re, $localValue, $matches);
+		$nbMatches = preg_match_all($re, $target, $matches);
 
 		$basicAuthMatch = $nbMatches > 0 ? current($matches) : [];
 		if (isset($basicAuthMatch['username']) && !empty($basicAuthMatch['username'])) {
-			$localValue = $basicAuthMatch['protocol'] . $basicAuthMatch['url'];
+			$target = $basicAuthMatch['protocol'] . $basicAuthMatch['url'];
 		}
 
 		// Wildcard support
@@ -974,8 +974,8 @@ COMP;
 		}
 
 		$lines = array();
-		$lines[] = "\$this->log(\"Wait for location $localValue\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
+		$lines[] = "    \$this->log(\"Wait for location $localValue\");";
 		$lines[] = '    try {';
 		$lines[] = "        \$url = {$localExpression};";
 		$lines[] = "        $compareLine";

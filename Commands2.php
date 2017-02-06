@@ -196,16 +196,17 @@ class Commands2 {
 
 	public function clickWithWait($selector) {
 		$lines = array();
+		$localExpression = str_replace($this->_obj, '$testCase', "{$this->_obj}->url()");
 		$lines[] = "\$this->log(\"Click on  $selector\");";
 		$lines[] = "\$gotoUrl = " . $this->_byQuery($selector) . ";";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->click();';
 
 		$lines[] = "if (\$gotoUrl && !empty(\$gotoUrl->attribute('href'))) {";
-		$lines[] = "    \$this->log(\"Wait for location\" . \$gotoUrl->attribute('href'));";
+		$lines[] = "    \$this->log(\"Wait for location \" . \$gotoUrl->attribute('href'));";
 		$lines[] = "    " . $this->_obj . '->waitUntil(function($testCase) use ($gotoUrl) {';
 		$lines[] = '        try {';
-		$lines[] = "            \$url = {$this->_byQuery($selector)};";
+		$lines[] = "            \$url = {$localExpression};";
 		$lines[] = "            if (\$url == \$gotoUrl->attribute('href')) {";
 		$lines[] = "                return true;";
 		$lines[] = "            }";

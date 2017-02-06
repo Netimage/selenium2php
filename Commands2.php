@@ -194,6 +194,27 @@ class Commands2 {
 		return "{$this->_obj}->byLinkText(\"{$selector}\", " . ($wait ? 'true' : 'false') . ")";
 	}
 
+	public function clickWithWait($selector) {
+		$lines = array();
+		$lines[] = "\$this->log(\"Click on  $selector\");";
+		$lines[] = "\$gotoUrl = " . $this->_byQuery($selector) . ";";
+		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
+		$lines[] = '$input->click();';
+
+		$lines[] = "if (\$gotoUrl && !empty(\$gotoUrl->attribute('href'))) {";
+		$lines[] = "    \$this->log(\"Wait for location \$gotoUrl\");";
+		$lines[] = "    " . $this->_obj . '->waitUntil(function($testCase) use ($gotoUrl) {';
+		$lines[] = '        try {';
+		$lines[] = "            \$url = {$this->_byQuery($selector)};";
+		$lines[] = "            if (\$url == \$gotoUrl->attribute('href')) {";
+		$lines[] = "                return true;";
+		$lines[] = "            }";
+		$lines[] = '        } catch (Exception $e) {}';
+		$lines[] = "    }, {$this->waitInMilliseconds});";
+		$lines[] = "}";
+		return $lines;
+	}
+
 	public function click($selector) {
 		$lines = array();
 		$lines[] = "\$this->log(\"Click on  $selector\");";
@@ -242,7 +263,7 @@ class Commands2 {
 	 * @return array
 	 */
 	public function clickAndWait($target) {
-		return array_merge($this->screenshotOnStep(), $this->click($target));
+		return array_merge($this->screenshotOnStep(), $this->clickWithWait($target));
 	}
 	
 	/**

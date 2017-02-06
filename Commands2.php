@@ -954,7 +954,7 @@ class Commands2 {
 		$re = '/(?<protocol>http[s]{0,1}:\/\/)(?<username>.*):(?<password>.*)@(?<url>.*)/';
 		$nbMatches = preg_match_all($re, $localValue, $matches);
 
-		if ($nbMatches > 0 && !empty($matches['username'])) {
+		if (isset($matches['username']) && !empty($matches['username'])) {
 			$localValue = $matches['protocol'] . $matches['url'];
 		}
 
@@ -973,7 +973,7 @@ COMP;
 		}
 
 		$lines = array();
-		$lines[] = "\$this->log(\"Wait for location $target\");";
+		$lines[] = "\$this->log(\"Wait for location $localValue\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
 		$lines[] = "        \$url = {$localExpression};";

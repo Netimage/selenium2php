@@ -310,8 +310,7 @@ class Commands2 {
 			$value = '/' . str_replace('*', '.+', $value) . '/';
 			$lines[] = "{$this->_obj}->assertRegExp(\"$value\", \$input->text());";
 		} else {
-			// Ignore case (last param)
-			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \$input->text(), \"Failed to assert equal '{$value}' to '{\$input->text()}'\", 0.0, 10, false, true);";
+			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \$input->text(), \"Failed to assert equal '{$value}' to '{\$input->text()}'\");";
 		}
 
 		return $lines;
@@ -923,6 +922,14 @@ class Commands2 {
 			}
 		}
 		$localValue = str_replace($search, $replace, $target);
+
+		// Any basic auth we need to filter out?
+		$re = '/(?<protocol>http[s]{0,1}:\/\/)(?<username>.*):(?<password>.*)@(?<url>.*)/';
+		$nbMatches = preg_match_all($re, $localValue, $matches);
+
+		if ($nbMatches > 0 && !empty($matches['username'])) {
+			$localValue = $matches['protocol'] . $matches['url'];
+		}
 
 		// Wildcard support
 		if (stripos($target, '*') !== false) {

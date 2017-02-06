@@ -954,8 +954,9 @@ class Commands2 {
 		$re = '/(?<protocol>http[s]{0,1}:\/\/)(?<username>.*):(?<password>.*)@(?<url>.*)/';
 		$nbMatches = preg_match_all($re, $localValue, $matches);
 
-		if (isset($matches['username']) && !empty($matches['username'])) {
-			$localValue = $matches['protocol'] . $matches['url'];
+		$basicAuthMatch = $nbMatches > 0 ? current($matches) : [];
+		if (isset($basicAuthMatch['username']) && !empty($basicAuthMatch['username'])) {
+			$localValue = $basicAuthMatch['protocol'] . $basicAuthMatch['url'];
 		}
 
 		// Wildcard support

@@ -974,8 +974,9 @@ COMP;
 		}
 
 		$lines = array();
+		$lines[] = "\$this->log(\"Waiting for location...\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
-		$lines[] = "    \$this->log(\"Wait for location $localValue\");";
+		$lines[] = "    \$testCase->log(\"Wait for location $localValue\");";
 		$lines[] = '    try {';
 		$lines[] = "        \$url = {$localExpression};";
 		$lines[] = "        $compareLine";

@@ -202,7 +202,7 @@ class Commands2 {
 		$lines[] = '$input->click();';
 
 		$lines[] = "if (\$gotoUrl && !empty(\$gotoUrl->attribute('href'))) {";
-		$lines[] = "    \$this->log(\"Wait for location \$gotoUrl\");";
+		$lines[] = "    \$this->log(\"Wait for location\" . \$gotoUrl->attribute('href'));";
 		$lines[] = "    " . $this->_obj . '->waitUntil(function($testCase) use ($gotoUrl) {';
 		$lines[] = '        try {';
 		$lines[] = "            \$url = {$this->_byQuery($selector)};";

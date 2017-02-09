@@ -474,7 +474,10 @@ class Commands2 {
 		$lines[] = "        if (\$element && \$element->displayed()) {";
 		$lines[] = "            return true;";
 		$lines[] = "        }";
-		$lines[] = '    } catch (Exception $e) {}';
+		$lines[] = '    } catch (Exception $e) {';
+		$lines[] = '        $this->log("Exception thrown (get_class($e)) in " . __METHOD__ . ", #($e->getCode()), message: \n" . $e->getMessage());';
+		$lines[] = '        $this->log("Stacktrace\n" . $e->getTraceAsString());';
+		$lines[] = "    }";
 		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;
 	}

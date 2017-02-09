@@ -457,8 +457,9 @@ class Converter {
 
 			$lines[] = $this->_indent(4) . "\$this->log('{$methodName} completed with success');";
 			$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
-			$lines[] = $this->_indent(8) . '$this->log("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage()); flush();';
-			$lines[] = $this->_indent(8) . '$this->log("Stacktrace\n" . $e->getTraceAsString()); flush();';
+			$lines[] = $this->_indent(8) . '$this->log("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
+			$lines[] = $this->_indent(8) . '$this->log("Stacktrace\n" . $e->getTraceAsString());';
+			$lines[] = $this->_indent(8) . '$this->takeScreenshot("failure");';
 			$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
 			$lines[] = $this->_indent(4) . '}';
 

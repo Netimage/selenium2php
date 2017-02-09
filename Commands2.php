@@ -443,10 +443,12 @@ class Commands2 {
 		$lines[] = "        if (PHPUnit_Extensions_Selenium2TestCase_WebDriverException::NoSuchElement == \$e->getCode()) {";
 		$lines[] = "            return true;";
 		$lines[] = "        } else {";
-		$lines[] = "            \$this->fail(\"Unexpected exception: \" . print_r(\$e, true));";
+		$lines[] = '             $this->log("Unexpected exception in " . __METHOD__ . " #($e->getCode()), message: \n" . $e->getMessage());';
+		$lines[] = '             $this->log("Stacktrace\n" . $e->getTraceAsString());';
 		$lines[] = "        }";
 		$lines[] = "    } catch (Exception \$e) {";
-		$lines[] = "        \$this->fail(\"Unexpected exception: \" . print_r(\$e, true));";
+		$lines[] = '        $this->log("Unexpected exception (get_class($e)) in " . __METHOD__ . ", #($e->getCode()), message: \n" . $e->getMessage());';
+		$lines[] = '        $this->log("Stacktrace\n" . $e->getTraceAsString());';
 		$lines[] = "    }";
 		$lines[] = "}, {$this->waitInMilliseconds});";
 		return $lines;

@@ -1073,8 +1073,35 @@ COMP;
 	public function verifyValue($target, $value) {
 		return $this->assertValue($target, $value);
 	}
-	
+
+	/**
+	 * Creates a wait for condition for a xpath count
+	 * @param string $target
+	 * @param int $count
+	 * @return array
+	 */
 	public function waitForXpathCount($target, $count) {
+		return $this->waitForXpath($target, $count);
+	}
+
+	/**
+	 * Waiting for an xpath count to be not true
+	 * @param string $target
+	 * @param int $count
+	 * @return array
+	 */
+	public function waitForNotXpathCount($target, $count) {
+		return $this->waitForXpath($target, $count, true);
+	}
+
+	/**
+	 * Creates a wait for condition for a xpath count
+	 * @param string $target
+	 * @param int $count
+	 * @param boolean $inverse Wait for the condition "NOT" to be true
+	 * @return array
+	 */
+	private function waitForXpath($target, $count, $inverse = false) {
 		/*
 		 * In Selenium 2 we can not interact with invisible elements.
 		 */
@@ -1082,7 +1109,7 @@ COMP;
 		if (!is_numeric($count)) {
 			$count = '"' . $count . '"';
 		}
-		
+
 		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
 		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
 		preg_match_all($re, $count, $matches);
@@ -1096,11 +1123,14 @@ COMP;
 		}
 		$localValue = str_replace($search, $replace, $count);
 
+		// How to compare?
+		$equal = $inverse ? '!=' : '==';
+		
 		$lines = array();
 		$lines[] = "\$this->log(\"Wait for xpath count " . addslashes($target) . " = " . addslashes($count) . "\");";
 		$lines[] = $this->_obj . '->waitUntil(function($testCase) {';
 		$lines[] = '    try {';
-		$lines[] = "        if ({$localValue} == \$testCase->xPathCount(\"{$target}\")) {";
+		$lines[] = "        if ({$localValue} $equal \$testCase->xPathCount(\"{$target}\")) {";
 		$lines[] = "            return true;";
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';

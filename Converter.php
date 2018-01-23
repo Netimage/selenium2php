@@ -44,7 +44,7 @@ class Converter {
 
 	/**
 	 * Build ID specification
-	 * @var string 
+	 * @var string
 	 */
 	public $_projectBuild = null;
 
@@ -98,7 +98,7 @@ class Converter {
 
 	/**
 	 * Array of strings with text before class defenition
-	 * @var array 
+	 * @var array
 	 */
 	protected $_tplPreClass = array();
 	protected $_tplClassPrefix = '';
@@ -119,13 +119,13 @@ class Converter {
 
 	/**
 	 * Port of Selenium Server
-	 * @var type 
+	 * @var type
 	 */
 	protected $_remotePort = '';
 
 	/**
 	 *
-	 * @var string 
+	 * @var string
 	 */
 	protected $_tplCustomParam1 = '';
 
@@ -136,9 +136,9 @@ class Converter {
 	protected $_tplCustomParam2 = '';
 
 	/**
-	 * Parses HTML string into array of commands, 
-	 * determines testHost and testName. 
-	 * 
+	 * Parses HTML string into array of commands,
+	 * determines testHost and testName.
+	 *
 	 * @param string $htmlStr
 	 * @throws Exception
 	 */
@@ -147,10 +147,10 @@ class Converter {
 		$html = str_get_html($htmlStr);
 		if ($html && $html->find('link')) {
 
-			if (!$this->_testUrl) {
+			if ( ! $this->_testUrl) {
 				$this->_testUrl = $html->find('link', 0)->href;
 			}
-			if (!$this->_testName) {
+			if ( ! $this->_testName) {
 				$title = $html->find('title', 0)->innertext;
 				$title = preg_replace('/[^A-Za-z0-9]/', '_', ucwords($title));
 				$this->_testName = preg_replace('/[^A-Za-z0-9]/', '_', ucwords($title));
@@ -169,7 +169,8 @@ class Converter {
 					);
 				}
 			}
-		} else {
+		}
+		else {
 			throw new Exception("HTML parse error");
 		}
 	}
@@ -182,12 +183,13 @@ class Converter {
 		$xml = simplexml_load_string($htmlStr);
 
 		$results = [];
-		$links = $xml->body->table->tbody; /* @var $links SimpleXMLElement */
+		$links = $xml->body->table->tbody;
+		/* @var $links SimpleXMLElement */
 		foreach ($links->children() as $link) {
 			/* @var $link SimpleXMLElement */
 			if ($link->td->a) {
 				$linkAttributes = $link->td->a->attributes();
-				$href = (string) $linkAttributes['href'];
+				$href = (string)$linkAttributes['href'];
 				$fileName = $suitePath . DIRECTORY_SEPARATOR . $href;
 				$results[] = $this->convert(file_get_contents($fileName), '', '', true);
 			}
@@ -197,7 +199,7 @@ class Converter {
 
 	/**
 	 * Converts HTML text of Selenium test case into PHP code
-	 * 
+	 *
 	 * @param string $htmlStr content of html file with Selenium test case
 	 * @param string $testName test class name (leave blank for auto)
 	 * @param boolean $functionOnly
@@ -210,11 +212,13 @@ class Converter {
 		if ($tplFile) {
 			if (is_file($tplFile)) {
 				$content = $this->_convertToTpl($tplFile);
-			} else {
+			}
+			else {
 				echo "Template file $tplFile is not accessible.";
 				exit;
 			}
-		} else {
+		}
+		else {
 			$lines = $this->_composeLines($functionOnly);
 			$content = $this->_composeStrWithIndents($lines, 4);
 		}
@@ -228,11 +232,13 @@ class Converter {
 			if (is_file($tplFile)) {
 				$this->_testName = $testName;
 				$content = $this->_convertToTpl($tplFile, $testStringContent);
-			} else {
+			}
+			else {
 				echo "Template file $tplFile is not accessible.";
 				exit;
 			}
-		} else {
+		}
+		else {
 			$content = $this->_composeStr($this->_composeLines(false, $testStringContent));
 		}
 
@@ -241,7 +247,7 @@ class Converter {
 
 	/**
 	 * Implodes lines of file into one string
-	 * 
+	 *
 	 * @param array $lines
 	 * @return string
 	 */
@@ -252,7 +258,7 @@ class Converter {
 	/**
 	 * Adds indents to each line except first
 	 * and implodes lines into one string
-	 * 
+	 *
 	 * @param array $lines array of strings
 	 * @param int $indentSize
 	 * @return string
@@ -281,7 +287,7 @@ class Converter {
 
 	/**
 	 * Uses tpl file for output result.
-	 * 
+	 *
 	 * @param string $tplFile filepath
 	 * @param string $testMethodContent
 	 * @return string output content
@@ -323,16 +329,16 @@ class Converter {
 			return '';
 		}
 		$capabilities = $this->_createArrayParam('project', $this->_projectName) .
-				$this->_createArrayParam('build', $this->_projectBuild) .
-				$this->_createArrayParam('name', $this->_testName);
+			$this->_createArrayParam('build', $this->_projectBuild) .
+			$this->_createArrayParam('name', $this->_testName);
 		if (intval($this->browserstackLocal)) {
-			$capabilities .= $this->_createArrayParam('browserstack.local', (bool) $this->browserstackLocal);
+			$capabilities .= $this->_createArrayParam('browserstack.local', (bool)$this->browserstackLocal);
 			if ($this->browserstackLocalIdentifier) {
 				$capabilities .= $this->_createArrayParam('browserstack.localIdentifier', $this->browserstackLocalIdentifier);
 			}
 		}
 
-		if (!$this->video) {
+		if ( ! $this->video) {
 			$capabilities .= $this->_createArrayParam('browserstack.video', 'false');
 		}
 
@@ -347,19 +353,20 @@ class Converter {
 				'browserstack.user'	 => BROWSERSTACK_USER,
 				'browserstack.key'	 => BROWSERSTACK_KEY,
 				'os'				 => '{os}',
-				'os_version'		 => '{osVersion}'
+				'os_version'		 => '{osVersion}',
+				'resolution'		 => '{resolution}'
 			)
 		)";
 		$browserArr = array();
 
 		$browserList = explode(',', $this->browsers);
 		foreach ($browserList as $browserName) {
-			if (!isset($browsers[$browserName])) {
+			if ( ! isset($browsers[$browserName])) {
 				throw new Exception("Unsupported browser with name $browserName specified");
 			}
 			$browser = $browsers[$browserName];
-			$this->setDefaultValues($browser, ['browserName' => null, 'version' => null, 'os' => null, 'osVersion' => null]);
-			$browserArr[] = str_replace(['{browserName}', '{version}', '{os}', '{osVersion}'], [$browser['browserName'], $browser['version'], $browser['os'], $browser['osVersion']], $template);
+			$this->setDefaultValues($browser, ['browserName' => null, 'version' => null, 'os' => null, 'osVersion' => null, 'resolution' => null]);
+			$browserArr[] = str_replace(['{browserName}', '{version}', '{os}', '{osVersion}', '{resolution}'], [$browser['browserName'], $browser['version'], $browser['os'], $browser['osVersion'], $browser['resolution']], $template);
 		}
 
 
@@ -377,7 +384,8 @@ class Converter {
 		if ($value) {
 			if (is_bool($value)) {
 				$return = "'{$name}'					 => " . ($value ? 'true' : 'false') . ",\n";
-			} else {
+			}
+			else {
 				$return = "'{$name}'					 => '{$value}',\n";
 			}
 		}
@@ -391,7 +399,7 @@ class Converter {
 	 */
 	protected function setDefaultValues(&$array, $values) {
 		foreach ($values as $value => $default) {
-			if (!isset($array[$value])) {
+			if ( ! isset($array[$value])) {
 				$array[$value] = $default;
 			}
 		}
@@ -406,7 +414,7 @@ class Converter {
 	protected function _composeLines($functionOnly = false, $functionContent = null) {
 		$lines = array();
 
-		if (!$functionOnly) {
+		if ( ! $functionOnly) {
 			$lines[] = $this->_tplFirstLine;
 			$lines[] = $this->_composeComment();
 
@@ -438,7 +446,8 @@ class Converter {
 		}
 		if ($functionContent) {
 			$lines[] = $functionContent;
-		} else {
+		}
+		else {
 			$methodName = $this->_composeTestMethodName();
 			if ($this->_lastTestName && $this->_lastTestName != $methodName) {
 				$lines[] = $this->_indent(4) . "/**";
@@ -468,14 +477,14 @@ class Converter {
 			$this->_lastTestName = $methodName;
 			$this->_testIndex++;
 		}
-		if (!$functionOnly) {
+		if ( ! $functionOnly) {
 			$lines[] = "}";
 		}
 		return $lines;
 	}
 
 	protected function _indent($size) {
-		return str_repeat("\t", (int) ($size / 4));
+		return str_repeat("\t", (int)($size / 4));
 	}
 
 	protected function _composeClassName() {
@@ -497,7 +506,8 @@ class Converter {
 		$mLines[] = '$this->setBrowser("' . $this->_browser . '");';
 		if ($this->_testUrl) {
 			$mLines[] = '$this->setBrowserUrl("' . $this->_testUrl . '");';
-		} else {
+		}
+		else {
 			$mLines[] = '$this->setBrowserUrl("' . $this->_defaultTestUrl . '");';
 		}
 		if ($this->_remoteHost) {
@@ -513,7 +523,8 @@ class Converter {
 		if ($this->_selenium2) {
 			require_once 'Commands2.php';
 			$commands = new Commands2;
-		} else {
+		}
+		else {
 			require_once 'Commands.php';
 			$commands = new Commands;
 		}
@@ -521,7 +532,7 @@ class Converter {
 
 		// Key value pairs
 		$vars = explode('$', $this->overrideSeleniumParams);
-		if (!empty($this->overrideSeleniumParams) && is_array($vars) && count($vars) > 0) {
+		if ( ! empty($this->overrideSeleniumParams) && is_array($vars) && count($vars) > 0) {
 			var_dump($vars);
 			foreach ($vars as $var) {
 				list($key, $value) = explode(',', $var);
@@ -542,16 +553,19 @@ class Converter {
 					$res .= $this->_tplCommandEOL;
 				}
 				$mLines[] = $res;
-			} else if (is_array($res)) {
-				$size = count($res);
-				$i = 0;
-				foreach ($res as $subLine) {
-					$i++;
-					if ($size === $i && $this->_tplCommandEOL !== '') {
-						$subLine .= $this->_tplCommandEOL;
-					}
+			}
+			else {
+				if (is_array($res)) {
+					$size = count($res);
+					$i = 0;
+					foreach ($res as $subLine) {
+						$i++;
+						if ($size === $i && $this->_tplCommandEOL !== '') {
+							$subLine .= $this->_tplCommandEOL;
+						}
 
-					$mLines[] = $subLine;
+						$mLines[] = $subLine;
+					}
 				}
 			}
 		}
@@ -592,8 +606,8 @@ class Converter {
 
 	/**
 	 * Sets browser where test runs
-	 * 
-	 * @param string $browser example: *firefox 
+	 *
+	 * @param string $browser example: *firefox
 	 */
 	public function setBrowser($browser) {
 		$this->_browser = $browser;
@@ -613,7 +627,7 @@ class Converter {
 
 	/**
 	 * Sets lines of text into test class
-	 * 
+	 *
 	 * @param array $content - array of strings with methods or properties
 	 */
 	public function setTplAdditionalClassContent($linesOfText) {
@@ -623,7 +637,7 @@ class Converter {
 	/**
 	 * Sets name of class as parent for test class
 	 * Default: PHPUnit_Extensions_SeleniumTestCase
-	 * 
+	 *
 	 * @param string $className
 	 */
 	public function setTplParentClass($className) {
@@ -642,7 +656,7 @@ class Converter {
 
 	/**
 	 * Passes value to template file
-	 * 
+	 *
 	 * @param type $value
 	 */
 	public function setTplCustomParam1($value) {
@@ -651,7 +665,7 @@ class Converter {
 
 	/**
 	 * Passes value to template file
-	 * 
+	 *
 	 * @param type $value
 	 */
 	public function setTplCustomParam2($value) {

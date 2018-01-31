@@ -157,7 +157,7 @@ class Converter {
 	 * @param string $htmlStr
 	 * @throws Exception
 	 */
-	protected function _parseHtml($htmlStr) {
+	protected function _parseHtml(string $htmlStr) {
 		require_once 'libs/simple_html_dom.php';
 		$html = str_get_html($htmlStr);
 		if ($html && $html->find('link')) {
@@ -192,8 +192,9 @@ class Converter {
 	/**
 	 * Parses HTML from a suite file
 	 * @param string $htmlStr
+	 * @param string $suitePath
 	 */
-	protected function _parseSuiteHtml($htmlStr, $suitePath) {
+	protected function _parseSuiteHtml(string $htmlStr, string $suitePath) {
 		$xml = simplexml_load_string($htmlStr);
 
 		$results = [];
@@ -219,7 +220,7 @@ class Converter {
 	 * @param boolean $functionOnly
 	 * @return string PHP test case file content
 	 */
-	public function convert($htmlStr, $testName = '', $tplFile = '', $functionOnly = false) {
+	public function convert(string $htmlStr, string $testName = '', string $tplFile = '', boolean $functionOnly = false) {
 		$this->_testName = $testName;
 		$this->_commands = array();
 		$this->_parseHtml($htmlStr);
@@ -238,13 +239,14 @@ class Converter {
 	}
 
 	/**
-	 * @param $htmlStr
+	 * Converts the suite HTML string to a set of test cases
+	 * @param string $htmlStr
 	 * @param string $testName
 	 * @param string $tplFile
 	 * @param string $suitePath
 	 * @return string
 	 */
-	public function convertSuite($htmlStr, $testName = '', $tplFile = '', $suitePath = '') {
+	public function convertSuite(string $htmlStr, string $testName = '', string $tplFile = '', string $suitePath = '') {
 		$testContent = $this->_parseSuiteHtml($htmlStr, $suitePath);
 		$testStringContent = implode("\n\n", $testContent);
 		if ($tplFile) {
@@ -280,7 +282,7 @@ class Converter {
 	 * @param int $indentSize
 	 * @return string
 	 */
-	protected function _composeStrWithIndents($lines, $indentSize) {
+	protected function _composeStrWithIndents(array $lines, int $indentSize) {
 		foreach ($lines as $i => $line) {
 			if ($i != 0) {
 				$lines[$i] = $this->_indent($indentSize) . $line;

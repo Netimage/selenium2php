@@ -2,5 +2,8 @@
     "name": "netimage/selenium2php",
     "description": "Selection html test cases to PHP converter",
     "version" : "master",
-    "type": "library"
+    "type": "library",
+    "require": {
+        "php" : "^7"
+    }
 }

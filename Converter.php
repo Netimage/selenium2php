@@ -217,10 +217,11 @@ class Converter {
 	 *
 	 * @param string $htmlStr content of html file with Selenium test case
 	 * @param string $testName test class name (leave blank for auto)
+	 * @param string $tplFile
 	 * @param boolean $functionOnly
 	 * @return string PHP test case file content
 	 */
-	public function convert(string $htmlStr, string $testName = '', string $tplFile = '', boolean $functionOnly = false) {
+	public function convert(string $htmlStr, string $testName = '', string $tplFile = '', bool $functionOnly = false) {
 		$this->_testName = $testName;
 		$this->_commands = array();
 		$this->_parseHtml($htmlStr);

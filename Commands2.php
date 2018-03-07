@@ -799,6 +799,7 @@ class Commands2 {
 		$lines = array();
 		$lines[] = '$element = ' . $this->_byQuery($target) . ';';
 		$lines[] = "{$this->_obj}->store(\"$varName\", \$element->text());";
+		$lines[] = "\$this->log(\"Variable $varName set to {\$element->text()}\");";
 		return $lines;
 	}
 

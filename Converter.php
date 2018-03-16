@@ -178,9 +178,9 @@ class Converter {
 					$value = $row->find('td', 2)->innertext;
 
 					$this->_commands[] = array(
-						'command' => $command,
-						'target' => $target,
-						'value' => $value
+						'command' => trim($command),
+						'target' => trim($target),
+						'value' => trim($value)
 					);
 				}
 			}

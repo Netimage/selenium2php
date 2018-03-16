@@ -179,14 +179,14 @@ class KatalonConverter {
 					$target = $row->find('td', 1)->innertext;
 					$datalist_position = strpos($target, '<datalist>');
 					if ($datalist_position) {
-						$target = trim(substr($target, 0, $datalist_position));
+						$target = substr($target, 0, $datalist_position);
 					}
 					$value = $row->find('td', 2)->innertext;
 
 					$this->_commands[] = array(
-						'command' => $command,
-						'target' => $target,
-						'value' => $value
+						'command' => trim($command),
+						'target' => trim($target),
+						'value' => trim($value)
 					);
 				}
 			}

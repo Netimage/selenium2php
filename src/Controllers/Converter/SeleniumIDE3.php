@@ -20,23 +20,23 @@ namespace Combine\Controllers\Converter;
 
 use Exception;
 use SebastianBergmann\RecursionContext\Exception as Exception2;
-use SimpleXMLElement;
+use JsonSerializable;
 use Zend_Config_Ini;
 
 /**
  * Converts HTML text of Selenium test case recorded from Selenium IDE into
  * PHP code for PHPUnit_Extensions_SeleniumTestCase as TestCase file.
  */
-class KatalonConverter {
+class SeleniumIDE3Converter {
 
 	protected $_testName = '';
+	public $_testClassName = '';
 	protected $_lastTestName = '';
 	protected $_testIndex = 0;
 	protected $_testUrl = '';
 	protected $_defaultTestName = 'some';
 	protected $_defaultTestUrl = 'http://example.com';
 	protected $_selenium2 = false;
-	protected $_commands = array();
 	protected $_tplEOL = PHP_EOL;
 	protected $_tplCommandEOL = '';
 	protected $_tplFirstLine = '<?php';
@@ -53,6 +53,12 @@ class KatalonConverter {
 	 * @var string Project name
 	 */
 	public $_projectName = null;
+
+	/**
+	 *
+	 * @var string Name or test suite reference by ID in JSON file
+	 */
+	public $_suiteReference = null;
 
 	/**
 	 *
@@ -151,64 +157,85 @@ class KatalonConverter {
 	protected $_tplCustomParam2 = '';
 
 	public function __construct() {
-		require_once __DIR__ . '/../../../libs/simple_html_dom.php';
+		// require_once __DIR__ . '/../../../libs/simple_html_dom.php';
 	}
 
-
 	/**
-	 * Parses HTML string into array of commands,
-	 * determines testHost and testName.
+	 * Parses JSON array from test case object of the belonging commands,
+	 * determines test method name.
 	 *
-	 * @param string $htmlStr
+	 * @param string $jsonStr
 	 * @throws Exception
 	 */
-	protected function _parseHtml(string $htmlStr) {
-
-		$html = str_get_html($htmlStr);
-		if ($html) {
-
-			if (!$this->_testName) {
-				$title = $html->find('thead td', 0)->innertext;
-				$title = preg_replace('/[^A-Za-z0-9]/', '_', ucwords($title));
-				$this->_testName = preg_replace('/[^A-Za-z0-9]/', '_', ucwords($title));
+	protected function _parseTestCase(array $jsonTestCase, &$testMethodName = '') {
+		if ($jsonTestCase) {
+			if (empty($testMethodName)) {
+				$title = $jsonTestCase['name'];
+				$testMethodName = $this->_makeTestName($title);
 			}
 
-			foreach ($html->find('tbody tr') as $row) {
-				if ($row->find('td', 2)) {
-					$command = $row->find('td', 0)->innertext;
-					$target = $row->find('td', 1)->innertext;
-					$datalist_position = strpos($target, '<datalist>');
-					if ($datalist_position) {
-						$target = substr($target, 0, $datalist_position);
-					}
-					$value = $row->find('td', 2)->innertext;
-
-					$this->_commands[] = array(
-						'command' => trim($command),
-						'target' => trim($target),
-						'value' => trim($value)
+			$numScreenCapture = 1;
+			$commands = array();
+			foreach ($jsonTestCase['commands'] as $commandContent) {
+				if ($commandContent['command']) {
+					$commands[] = array(
+						'command' => trim($commandContent['command']),
+						'target' => trim($commandContent['target']),
+						'value' => trim($commandContent['value'])
 					);
+				}
+				/**
+				 * Work-around to be able for scripts to handle screenshot,
+				 * even though Selenium IDE 3 does not include this.
+				 */
+				if ($commandContent['comment'] == 'captureEntirePageScreenshot') {
+					$commands[] = array(
+						'command' => trim('captureEntirePageScreenshot'),
+						'target' => trim(($commandContent['target'] ? $commandContent['target'] : "${VAR_FILEPATH}/{$this->_testName}_{$numScreenCapture}.uat.tc.png")),
+						'value' => ''
+					);
+					$numScreenCapture++;
 				}
 			}
 		} else {
-			throw new Exception("HTML parse error");
+			throw new Exception("JSON test case parse error");
 		}
+		return $commands;
 	}
 
 	/**
 	 * Parses HTML from a suite file
-	 * @param string $htmlStr
+	 * @param string $jsonStr
 	 * @param string $suitePath
 	 */
-	protected function _parseSuiteHtml(string $htmlStr, string $suitePath) {
-		$xml = simplexml_load_string($htmlStr);
+	protected function _parse(string $jsonStr, string $suitePath) {
+		$json = json_decode($jsonStr, true);
+
+		// Adding keys to the test cases
+		$tests = array();
+		foreach ($json['tests'] as $value) {
+			$key = $value['id'];
+			$tests[$key] = $value;
+		}
+		if (sizeof($tests) > 0) {
+			$json['tests'] = $tests;
+		}
 
 		$results = [];
-		$testCases = $xml->body;
-		foreach ($testCases->children() as $testCase) {
-			/* @var $testCase SimpleXMLElement */
-			$domElement = dom_import_simplexml($testCase);
-			$results[] = $this->convert($domElement->ownerDocument->saveHTML($domElement), '', '', true);
+		foreach ($json['suites'] as $testSuite) {
+			if ($testSuite['name'] == $this->_suiteReference || $testSuite['id'] == $this->_suiteReference) {
+				$this->_testName = $this->_makeTestName($testSuite['name']);
+				foreach ($testSuite['tests'] as $testCaseReference) {
+					/* @var $testCaseReference string */
+					$jsonTestCase = $json['tests'][$testCaseReference];
+
+					$testMethodName = '';
+					$results[$testCaseReference]['commands'] = $this->_parseTestCase($jsonTestCase, $testMethodName);
+					$results[$testCaseReference]['name'] = $testMethodName;
+				}
+
+				break;
+			}
 		}
 
 		return $results;
@@ -217,22 +244,21 @@ class KatalonConverter {
 	/**
 	 * Converts HTML text of Selenium test case into PHP code
 	 *
-	 * @param string $htmlStr content of html file with Selenium test case
+	 * @param string $jsonContent Content of Selenium IDE3 JSON file with Selenium test case
 	 * @param string $testName test class name (leave blank for auto)
 	 * @param string $tplFile
 	 * @param boolean $functionOnly
 	 * @return string PHP test case file content
 	 */
-	public function convert(string $htmlStr, string $testName = '', string $tplFile = '', bool $functionOnly = false) {
+	public function convert(array $jsonContent, string $testName = '', string $tplFile = '', bool $functionOnly = false) {
 		$this->_testName = $testName;
-		$this->_commands = array();
-		$htmlStr = trim($htmlStr);
+		$jsonStr = trim($jsonStr);
 
-		if ( ! $htmlStr) {
+		if (!$jsonStr) {
 			return '';
 		}
 
-		$this->_parseHtml($htmlStr);
+		$lines = $this->_parse($jsonContent);
 		if ($tplFile) {
 			if (is_file($tplFile)) {
 				$content = $this->_convertToTpl($tplFile);
@@ -241,7 +267,7 @@ class KatalonConverter {
 				exit;
 			}
 		} else {
-			$lines = $this->_composeLines($functionOnly);
+			$lines = $this->_composeLines($lines, $functionOnly);
 			$content = $this->_composeStrWithIndents($lines, 4);
 		}
 		return $content;
@@ -249,25 +275,26 @@ class KatalonConverter {
 
 	/**
 	 * Converts the suite HTML string to a set of test cases
-	 * @param string $htmlStr
+	 * @param string $jsonStr
 	 * @param string $testName
 	 * @param string $tplFile
 	 * @param string $suitePath
 	 * @return string
 	 */
-	public function convertSuite(string $htmlStr, string $testName = '', string $tplFile = '', string $suitePath = '') {
-		$testContent = $this->_parseSuiteHtml($htmlStr, $suitePath);
-		$testStringContent = implode("\n\n", $testContent);
+	public function convertJSON(string $jsonStr, string $testName = '', string $tplFile = '', string $suitePath = '') {
+		$commandLines = $this->_parse($jsonStr, $suitePath);
+
+		// $testStringContent = implode("\n\n", $testContent);
 		if ($tplFile) {
 			if (is_file($tplFile)) {
 				$this->_testName = $testName;
-				$content = $this->_convertToTpl($tplFile, $testStringContent);
+				$content = $this->_convertToTpl($tplFile, $testContent);
 			} else {
-				echo "Template file $tplFile is not accessible.";
+				echo "Template file {$tplFile} is not accessible.";
 				exit;
 			}
 		} else {
-			$content = $this->_composeStr($this->_composeLines(false, $testStringContent));
+			$content = $this->_composeStr($this->_composeLines($commandLines, false));
 		}
 
 		return $content;
@@ -360,8 +387,8 @@ class KatalonConverter {
 			return '';
 		}
 		$capabilities = $this->_createArrayParam('project', $this->_projectName) .
-			$this->_createArrayParam('build', $this->_projectBuild) .
-			$this->_createArrayParam('name', $this->_testName);
+				$this->_createArrayParam('build', $this->_projectBuild) .
+				$this->_createArrayParam('name', $this->_testName);
 		if (intval($this->browserstackLocal)) {
 			$capabilities .= $this->_createArrayParam('browserstack.local', (bool) $this->browserstackLocal);
 			if ($this->browserstackLocalIdentifier) {
@@ -438,11 +465,17 @@ class KatalonConverter {
 
 	/**
 	 * Composes lines for the final class
+	 * @param array $commandLines The function command lines.
+	 * @param string $testMethodName Name of function
 	 * @param boolean $functionOnly If true, only the function contents will be created
 	 * @param string $functionContent Extra content to be added instead the first function
 	 * @return string
 	 */
-	protected function _composeLines($functionOnly = false, string $functionContent = null) {
+
+	/**
+	 * 
+	 */
+	protected function _composeLines($commandLines = array(), $testMethodName = '', $functionOnly = false, string $functionContent = null) {
 		$lines = array();
 
 		if (!$functionOnly) {
@@ -450,62 +483,67 @@ class KatalonConverter {
 			$lines[] = $this->_composeComment();
 
 			if (count($this->_tplPreClass)) {
-				$lines[] = "";
+				$lines[] = '';
 				foreach ($this->_tplPreClass as $mLine) {
 					$lines[] = $mLine;
 				}
-				$lines[] = "";
+				$lines[] = '';
 			}
 
-			$lines[] = "class " . $this->_composeClassName() . " extends " . $this->_tplParentClass . "{";
-			$lines[] = "";
+			$lines[] = 'class ' . $this->_composeClassName() . ' extends ' . $this->_tplParentClass . ' {';
+			$lines[] = '';
 
 			if (count($this->_tplAdditionalClassContent)) {
 				foreach ($this->_tplAdditionalClassContent as $mLine) {
 					$lines[] = $this->_indent(4) . $mLine;
 				}
-				$lines[] = "";
+				$lines[] = '';
 			}
 
 
-			$lines[] = $this->_indent(4) . "function setUp(){";
+			$lines[] = $this->_indent(4) . 'function setUp() {';
 			foreach ($this->_composeSetupMethodContent() as $mLine) {
 				$lines[] = $this->_indent(8) . $mLine;
 			}
-			$lines[] = $this->_indent(4) . "}";
+			$lines[] = $this->_indent(4) . '}';
 			$lines[] = "";
 		}
 		if ($functionContent) {
 			$lines[] = $functionContent;
 		} else {
-			$methodName = $this->_composeTestMethodName();
-			if ($this->_lastTestName && $this->_lastTestName != $methodName) {
-				$lines[] = $this->_indent(4) . "/**";
-				$lines[] = $this->_indent(4) . "* @depends " . $this->_lastTestName;
-				$lines[] = $this->_indent(4) . "*/";
+			
+			foreach ($commandLines as $testMethod) {
+				$methodName = $this->_composeTestMethodName($testMethod['name']);
+				if ($this->_lastTestName && $this->_lastTestName != $methodName) {
+					$lines[] = $this->_indent(4) . '/**';
+					$lines[] = $this->_indent(4) . '* @depends ' . $this->_lastTestName;
+					$lines[] = $this->_indent(4) . '*/';
+				}
+				$lines[] = $this->_indent(4) . "function {$methodName}() {";
+				$lines[] = $this->_indent(4) . "\$this->testIndex = {$this->_testIndex};";
+				$lines[] = $this->_indent(4) . "\$this->log('Running {$methodName}');";
+
+				$lines[] = $this->_indent(4) . 'try {';
+
+				foreach ($this->_composeTestMethodContent($testMethod['commands']) as $mLine) {
+					$lines[] = $this->_indent(8) . $mLine;
+				}
+
+				$lines[] = $this->_indent(8) . "\$this->log('{$methodName} completed with success');";
+				$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
+				$lines[] = $this->_indent(8) . '$this->log("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
+				$lines[] = $this->_indent(8) . '$this->log("Stacktrace\n" . $e->getTraceAsString());';
+				$lines[] = $this->_indent(8) . '$this->takeScreenshot("failure");';
+				$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
+				$lines[] = $this->_indent(4) . '}';
+
+				$lines[] = "}";
+				$lines[] = "";
+				$this->_lastTestName = $methodName;
+				$this->_testIndex++;
+				
 			}
-			$lines[] = $this->_indent(4) . "function " . $methodName . "() {";
-			$lines[] = $this->_indent(4) . "\$this->testIndex = {$this->_testIndex};";
-			$lines[] = $this->_indent(4) . "\$this->log('Running {$methodName}');";
-
-			$lines[] = $this->_indent(4) . 'try {';
-
-			foreach ($this->_composeTestMethodContent() as $mLine) {
-				$lines[] = $this->_indent(8) . $mLine;
-			}
-
-			$lines[] = $this->_indent(8) . "\$this->log('{$methodName} completed with success');";
-			$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
-			$lines[] = $this->_indent(8) . '$this->log("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
-			$lines[] = $this->_indent(8) . '$this->log("Stacktrace\n" . $e->getTraceAsString());';
-			$lines[] = $this->_indent(8) . '$this->takeScreenshot("failure");';
-			$lines[] = $this->_indent(8) . '$this->fail("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
-			$lines[] = $this->_indent(4) . '}';
-
-			$lines[] = "}";
-			$lines[] = "";
-			$this->_lastTestName = $methodName;
-			$this->_testIndex++;
+			
 		}
 		if (!$functionOnly) {
 			$lines[] = "}";
@@ -534,14 +572,27 @@ class KatalonConverter {
 	 * Construct the test method name
 	 * @return string
 	 */
-	protected function _composeTestMethodName() {
-		$return = $methodName = "test" . $this->_testName;
+	protected function _composeTestMethodName($testMethodName = '') {
+		$return = $methodName = $this->_makeTestName("test" . $testMethodName);
 		if (isset($this->methodNames[$methodName])) {
 			$return = $methodName . sprintf('%03d', (sizeof($this->methodNames[$methodName]) + 1));
 		}
 		$this->methodNames[$methodName][] = $return;
 
 		return $return;
+	}
+
+	/**
+	 * Makes output test name.
+	 * 
+	 * @param string $testMethodName input file name
+	 * @return string output test name
+	 */
+	protected function _makeTestName($testMethodName) {
+		/* get from file if this is empty */
+
+		$testMethodName = preg_replace('/[^A-Za-z0-9]/', '_', ucwords($testMethodName));
+		return $testMethodName;
 	}
 
 	/**
@@ -569,14 +620,9 @@ class KatalonConverter {
 	 * Walk through the commands array (for either Selenium RC or Selenium 2) and construct the test method
 	 * @return array
 	 */
-	protected function _composeTestMethodContent() {
-		if ($this->_selenium2) {
-			require_once __DIR__ . '/../../../Commands2.php';
-			$commands = new \Selenium2php\Commands2;
-		} else {
-			require_once __DIR__ . '/../../../Commands.php';
-			$commands = new \Selenium2php\Commands;
-		}
+	protected function _composeTestMethodContent($commandLines) {
+		require_once __DIR__ . '/../../../Commands2.php';
+		$commands = new \Selenium2php\Commands2;
 		$commands->screenshotsOnEveryStep = $this->screenshotsOnEveryStep;
 
 		// Key value pairs
@@ -590,8 +636,7 @@ class KatalonConverter {
 		}
 
 		$mLines = array();
-
-		foreach ($this->_commands as $row) {
+		foreach ($commandLines as $row) {
 			$command = $row['command'];
 			$target = $this->_prepareHtml($row['target']);
 			$value = $this->_prepareHtml($row['value']);
@@ -639,7 +684,7 @@ class KatalonConverter {
 	protected function _composeComment() {
 		$lines = array();
 		$lines[] = "/*";
-		$lines[] = "* Autogenerated from Selenium html test case by Selenium2php.";
+		$lines[] = "* Autogenerated from Selenium IDE 3 JSON test case by Selenium2php.";
 		$lines[] = "* " . date("Y-m-d H:i:s");
 		$lines[] = "*/";
 		$line = implode($this->_tplEOL, $lines);

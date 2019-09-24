@@ -486,7 +486,7 @@ class Converter {
 				$lines[] = $this->_indent(8) . $mLine;
 			}
 
-			$lines[] = $this->_indent(4) . "\$this->log('{$methodName} completed with success');";
+			$lines[] = $this->_indent(8) . "\$this->log('{$methodName} completed with success');";
 			$lines[] = $this->_indent(4) . '} catch (Exception $e) {';
 			$lines[] = $this->_indent(8) . '$this->log("Selenium test " . __METHOD__ . " failed with exception\n" . $e->getMessage());';
 			$lines[] = $this->_indent(8) . '$this->log("Stacktrace\n" . $e->getTraceAsString());';

@@ -587,6 +587,21 @@ class Commands2 {
 		$lines[] = "{$this->_obj}->store(\"$parsedValue\", \"javascript:$target\");";
 		return $lines;
 	}
+	
+	/**
+	 * Either store evaluated expression or just run script (javascript)
+	 * @param string $target
+	 * @param string $value
+	 * @return array
+	 */
+	public function executeScript($target, $value) {
+		if (empty($value)) {
+			$lines = $this->runScript($target);
+		} else {
+			$lines = $this->storeEval($target, $value);
+		}
+		return $lines;
+	}
 
 	/**
 	 * 
@@ -1071,8 +1086,39 @@ COMP;
 		return $lines;
 	}
 	
+	/**
+	 * Added to support command from Selenium IDE 3.
+	 * 
+	 * @param type $target
+	 * @param string $value
+	 * @return type
+	 */
+	public function assert($target, $value) {
+		$lines = array();
+		$lines[] = "\$this->log(\"Assert $target = $value\");";
+		if (strpos($value, '*')) {
+			$value = '/' . str_replace('*', '.+', $value) . '/';
+			$lines[] = "{$this->_obj}->assertRegExp(\"$value\", \"\${{$target}}\");";
+		} else {
+			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \"\${{$target}}\");";
+		}
+		return $lines;
+	}
+	
 	public function verifyValue($target, $value) {
 		return $this->assertValue($target, $value);
+	}
+	
+	/**
+	 * Added to support command from Selenium IDE 3
+	 * 
+	 * @see assert()
+	 * @param type $target
+	 * @param type $value
+	 * @return type
+	 */
+	public function verify($target, $value) {
+		return $this->assert($target, $value);
 	}
 
 	/**
@@ -1172,6 +1218,36 @@ COMP;
 		$lines[] = "        }";
 		$lines[] = '    } catch (Exception $e) {}';
 		$lines[] = "}, {$this->waitInMilliseconds});";
+		return $lines;
+	}
+	
+	/**
+	 * Added just to log the details written in commands.
+	 * 
+	 * @param string $value
+	 * @return type
+	 */
+	public function echo($value) {
+		// For non-numeric values: Escape
+		if (!is_numeric($value)) {
+			$value = '"' . $value . '"';
+		}
+		
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
+		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
+		preg_match_all($re, $value, $matches);
+		if (count($matches) > 0) {
+			$search = $replace = [];
+			$matchList = reset($matches);
+			foreach ($matchList as $match) {
+				$search[] = $match;
+				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
+			}
+		}
+		$localValue = str_replace($search, $replace, $value);
+
+		$lines = array();
+		$lines[] = "\$this->log({$value});";
 		return $lines;
 	}
 }

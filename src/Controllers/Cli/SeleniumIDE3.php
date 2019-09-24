@@ -261,7 +261,7 @@ class SeleniumIDE3 {
 			$result = $this->_converter->convertJSON($jsonContent, $this->_makeTestName($jsonFileName), $this->_tplFile, $dir);
 
 			if (!$phpFileName) {
-				$phpFileName = $this->_makeOutputFilename($jsonFileName + ' - ' + $this->_suiteReference, $jsonContent);
+				$phpFileName = $this->_makeOutputFilename($this->_suiteReference, $jsonContent);
 			}
 			
 			file_put_contents($phpFileName, $result);

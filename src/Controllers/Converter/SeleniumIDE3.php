@@ -541,7 +541,7 @@ class SeleniumIDE3Converter {
 	 * @return string
 	 */
 	protected function _composeTestMethodName($testMethodName = '') {
-		$return = $methodName = $this->_makeTestName("test" . $testMethodName);
+		$return = $methodName = "test" . $this->_makeTestName($testMethodName);
 		if (isset($this->methodNames[$methodName])) {
 			$return = $methodName . sprintf('%03d', (sizeof($this->methodNames[$methodName]) + 1));
 		}

@@ -254,7 +254,6 @@ class SeleniumIDE3 {
 
 	protected function parseFile($jsonFileName, $phpFileName) {
 		$jsonContent = file_get_contents($jsonFileName);
-		$jsonContent = mb_convert_encoding($jsonContent, 'HTML-ENTITIES', "UTF-8");
 		
 		if ($jsonContent) {
 			$dir = dirname(realpath($jsonFileName));

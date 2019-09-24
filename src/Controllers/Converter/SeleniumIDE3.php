@@ -327,7 +327,7 @@ class SeleniumIDE3Converter {
 			'{$remotePort}' => $this->_remotePort ? $this->_remotePort : '4444',
 			'{$testMethodName}' => $testMethodName,
 			'{$testMethodContent}' => $commandLines ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent($commandLines), 8),
-			'{$testMethods}' => $this->_composeStr($this->_composeLines($commandLines, false)),
+			'{$testMethods}' => $this->_composeStr($this->_composeLines($commandLines, false, true)),
 			'{$customParam1}' => $this->_tplCustomParam1,
 			'{$customParam2}' => $this->_tplCustomParam2,
 			'{$browsers}' => $this->_createBrowsers()

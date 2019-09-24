@@ -242,39 +242,7 @@ class SeleniumIDE3Converter {
 	}
 
 	/**
-	 * Converts HTML text of Selenium test case into PHP code
-	 *
-	 * @param string $jsonContent Content of Selenium IDE3 JSON file with Selenium test case
-	 * @param string $testName test class name (leave blank for auto)
-	 * @param string $tplFile
-	 * @param boolean $functionOnly
-	 * @return string PHP test case file content
-	 */
-	public function convert(array $jsonContent, string $testName = '', string $tplFile = '', bool $functionOnly = false) {
-		$this->_testName = $testName;
-		$jsonStr = trim($jsonStr);
-
-		if (!$jsonStr) {
-			return '';
-		}
-
-		$lines = $this->_parse($jsonContent);
-		if ($tplFile) {
-			if (is_file($tplFile)) {
-				$content = $this->_convertToTpl($tplFile);
-			} else {
-				echo "Template file $tplFile is not accessible.";
-				exit;
-			}
-		} else {
-			$lines = $this->_composeLines($lines, $functionOnly);
-			$content = $this->_composeStrWithIndents($lines, 4);
-		}
-		return $content;
-	}
-
-	/**
-	 * Converts the suite HTML string to a set of test cases
+	 * Converts the JSON string to a set of test cases
 	 * @param string $jsonStr
 	 * @param string $testName
 	 * @param string $tplFile
@@ -288,7 +256,7 @@ class SeleniumIDE3Converter {
 		if ($tplFile) {
 			if (is_file($tplFile)) {
 				$this->_testName = $testName;
-				$content = $this->_convertToTpl($tplFile, $testContent);
+				$content = $this->_convertToTpl($tplFile, $commandLines);
 			} else {
 				echo "Template file {$tplFile} is not accessible.";
 				exit;
@@ -344,10 +312,10 @@ class SeleniumIDE3Converter {
 	 * Use template file for output result.
 	 *
 	 * @param string $tplFile filepath
-	 * @param string $testMethodContent
+	 * @param array $commandLines
 	 * @return string output content
 	 */
-	protected function _convertToTpl(string $tplFile, string $testMethodContent = null) {
+	protected function _convertToTpl(string $tplFile, array $commandLines = null) {
 		$tpl = file_get_contents($tplFile);
 		$testMethodName = $testMethodContent ? 'noop' : $this->_composeTestMethodName();
 		$replacements = array(
@@ -358,7 +326,7 @@ class SeleniumIDE3Converter {
 			'{$remoteHost}' => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
 			'{$remotePort}' => $this->_remotePort ? $this->_remotePort : '4444',
 			'{$testMethodName}' => $testMethodName,
-			'{$testMethodContent}' => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent(), 8),
+			'{$testMethodContent}' => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent($commandLines), 8),
 			'{$testMethods}' => $testMethodContent,
 			'{$customParam1}' => $this->_tplCustomParam1,
 			'{$customParam2}' => $this->_tplCustomParam2,

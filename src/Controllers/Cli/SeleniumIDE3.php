@@ -332,18 +332,6 @@ class SeleniumIDE3 {
 		return $testName;
 	}
 
-	public function convertFile($jsonFileName, $phpFileName = '') {
-		$htmlContent = file_get_contents($jsonFileName);
-		if ($htmlContent) {
-			if (!$phpFileName) {
-				$phpFileName = $this->_makeOutputFilename($jsonFileName, $htmlContent);
-			}
-			$result = $this->_converter->convert($htmlContent, $this->_makeTestName($jsonFileName), $this->_tplFile);
-			file_put_contents($phpFileName, $result);
-			print $phpFileName . "\n";
-		}
-	}
-
 	protected function globRecursive($pattern, $flags) {
 		$files = glob($pattern, $flags);
 		foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {

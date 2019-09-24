@@ -257,7 +257,7 @@ class SeleniumIDE3 {
 		
 		if ($jsonContent) {
 			$dir = dirname(realpath($jsonFileName));
-			$result = $this->_converter->convertJSON($jsonContent, $this->_makeTestName($jsonFileName), $this->_tplFile, $dir);
+			$result = $this->_converter->convertJSON($jsonContent, $this->_makeTestName($this->_suiteReference), $this->_tplFile, $dir);
 
 			if (!$phpFileName) {
 				$phpFileName = $this->_makeOutputFilename($this->_suiteReference, $jsonContent);

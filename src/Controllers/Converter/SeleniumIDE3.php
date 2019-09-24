@@ -317,7 +317,7 @@ class SeleniumIDE3Converter {
 	 */
 	protected function _convertToTpl(string $tplFile, array $commandLines = null) {
 		$tpl = file_get_contents($tplFile);
-		$testMethodName = $testMethodContent ? 'noop' : $this->_composeTestMethodName();
+		$testMethodName = $commandLines ? 'noop' : $this->_composeTestMethodName();
 		$replacements = array(
 			'{$comment}' => $this->_composeComment(),
 			'{$className}' => $this->_composeClassName(),
@@ -326,8 +326,8 @@ class SeleniumIDE3Converter {
 			'{$remoteHost}' => $this->_remoteHost ? $this->_remoteHost : '127.0.0.1',
 			'{$remotePort}' => $this->_remotePort ? $this->_remotePort : '4444',
 			'{$testMethodName}' => $testMethodName,
-			'{$testMethodContent}' => $testMethodContent ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent($commandLines), 8),
-			'{$testMethods}' => $testMethodContent,
+			'{$testMethodContent}' => $commandLines ? '' : $this->_composeStrWithIndents($this->_composeTestMethodContent($commandLines), 8),
+			'{$testMethods}' => $this->_composeStr($this->_composeLines($commandLines, false)),
 			'{$customParam1}' => $this->_tplCustomParam1,
 			'{$customParam2}' => $this->_tplCustomParam2,
 			'{$browsers}' => $this->_createBrowsers()

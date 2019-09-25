@@ -69,7 +69,25 @@ class Commands2 {
 	}
 
 	public function open($target) {
-		return array_merge(["{$this->_obj}->url(\"$target\");"], $this->screenshotOnStep());
+		// For non-numeric values: Escape
+		if (!is_numeric($target)) {
+			$target = '"' . $target . '"';
+		}
+		
+		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
+		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
+		preg_match_all($re, $target, $matches);
+		if (count($matches) > 0) {
+			$search = $replace = [];
+			$matchList = reset($matches);
+			foreach ($matchList as $match) {
+				$search[] = $match;
+				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
+			}
+		}
+		$localTarget = str_replace($search, $replace, $target);
+		
+		return array_merge(["{$this->_obj}->url(\"$localTarget\");"], $this->screenshotOnStep());
 	}
 
 	public function type($selector, $value) {
@@ -1094,13 +1112,16 @@ COMP;
 	 * @return type
 	 */
 	public function assert($target, $value) {
+		$localTarget = $this->replaceStoredValues($target, $this->_obj);
+		$localValue = $this->replaceStoredValues($value, $this->_obj);
+		
 		$lines = array();
-		$lines[] = "\$this->log(\"Assert $target = $value\");";
+		$lines[] = "\$this->log(\"Assert {$localTarget} = {$localValue}\");";
 		if (strpos($value, '*')) {
-			$value = '/' . str_replace('*', '.+', $value) . '/';
-			$lines[] = "{$this->_obj}->assertRegExp(\"$value\", \"\${{$target}}\");";
+			$localValue = '/' . str_replace('*', '.+', $localValue) . '/';
+			$lines[] = "{$this->_obj}->assertRegExp(\"$localValue\", \"\${{$localTarget}}\");";
 		} else {
-			$lines[] = "{$this->_obj}->assertEquals(\"$value\", \"\${{$target}}\");";
+			$lines[] = "{$this->_obj}->assertEquals(\"$localValue\", \"\${{$localTarget}}\");";
 		}
 		return $lines;
 	}
@@ -1228,13 +1249,22 @@ COMP;
 	 * @return type
 	 */
 	public function echo($value) {
+		$localValue = $this->replaceStoredValues($value);
+
+		$lines = array();
+		$lines[] = "\$this->log({$localValue});";
+		return $lines;
+	}
+	
+	protected function replaceStoredValues($value, $_obj = '$this') {
 		// For non-numeric values: Escape
 		if (!is_numeric($value)) {
 			$value = '"' . $value . '"';
 		}
 		
 		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
-		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
+		$replaceTemplate = '" . ' . $_obj . '->getStoredValue("[value]") . "';
+		$matches = array();
 		preg_match_all($re, $value, $matches);
 		if (count($matches) > 0) {
 			$search = $replace = [];
@@ -1244,10 +1274,6 @@ COMP;
 				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
 			}
 		}
-		$localValue = str_replace($search, $replace, $value);
-
-		$lines = array();
-		$lines[] = "\$this->log({$localValue});";
-		return $lines;
+		return str_replace($search, $replace, $value);
 	}
 }

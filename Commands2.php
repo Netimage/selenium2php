@@ -1119,9 +1119,9 @@ COMP;
 		$lines[] = "\$this->log(\"Assert {$localTarget} = {$localValue}\");";
 		if (strpos($value, '*')) {
 			$localValue = '/' . str_replace('*', '.+', $localValue) . '/';
-			$lines[] = "{$this->_obj}->assertRegExp(\"$localValue\", \"\${{$localTarget}}\");";
+			$lines[] = "{$this->_obj}->assertRegExp($localValue, \${{$localTarget}});";
 		} else {
-			$lines[] = "{$this->_obj}->assertEquals(\"$localValue\", \"\${{$localTarget}}\");";
+			$lines[] = "{$this->_obj}->assertEquals($localValue, \${{$localTarget}});";
 		}
 		return $lines;
 	}

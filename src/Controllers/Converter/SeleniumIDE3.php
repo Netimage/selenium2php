@@ -348,7 +348,6 @@ class SeleniumIDE3Converter {
 	 * @throws Exception
 	 */
 	protected function _createBrowsers() {
-
 		$browsers = parse_ini_file(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'conf' . DIRECTORY_SEPARATOR . 'browsers.ini', true);
 
 		if (empty($this->browsers)) {
@@ -396,7 +395,6 @@ class SeleniumIDE3Converter {
 			$this->setDefaultValues($browser, ['browserName' => null, 'version' => null, 'os' => null, 'osVersion' => null, 'resolution' => null]);
 			$browserArr[] = str_replace(['{browserName}', '{version}', '{os}', '{osVersion}', '{resolution}'], [$browser['browserName'], $browser['version'], $browser['os'], $browser['osVersion'], $browser['resolution']], $template);
 		}
-
 
 		return implode(',', $browserArr);
 	}

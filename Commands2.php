@@ -1247,7 +1247,7 @@ COMP;
 		$localValue = str_replace($search, $replace, $value);
 
 		$lines = array();
-		$lines[] = "\$this->log({$value});";
+		$lines[] = "\$this->log({$localValue});";
 		return $lines;
 	}
 }

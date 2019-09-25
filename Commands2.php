@@ -50,7 +50,10 @@ class Commands2 {
 	 * @return string
 	 */
 	public function __call($name, $arguments) {
-		if (isset($arguments[1]) && false !== $arguments[1]) {
+		if ($name == 'echo') {
+			// Not allowed to create function for echo, so work-around
+			$this->printEcho($arguments[0], $arguments[1]);
+		} else if (isset($arguments[1]) && false !== $arguments[1]) {
 			$line = "//{$this->_obj}->$name(\"{$arguments[0]}\", \"{$arguments[1]}\");";
 			$this->_addNote('Unknown command', $name, $arguments);
 		} else if (false !== $arguments[0]) {
@@ -69,25 +72,9 @@ class Commands2 {
 	}
 
 	public function open($target) {
-		// For non-numeric values: Escape
-		if (!is_numeric($target)) {
-			$target = '"' . $target . '"';
-		}
+		$localTarget = $this->replaceStoredValues($target);
 		
-		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
-		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
-		preg_match_all($re, $target, $matches);
-		if (count($matches) > 0) {
-			$search = $replace = [];
-			$matchList = reset($matches);
-			foreach ($matchList as $match) {
-				$search[] = $match;
-				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
-			}
-		}
-		$localTarget = str_replace($search, $replace, $target);
-		
-		return array_merge(["{$this->_obj}->url(\"$localTarget\");"], $this->screenshotOnStep());
+		return array_merge(["{$this->_obj}->url($localTarget);"], $this->screenshotOnStep());
 	}
 
 	public function type($selector, $value) {
@@ -613,6 +600,8 @@ class Commands2 {
 	 * @return array
 	 */
 	public function executeScript($target, $value) {
+		$target = str_replace('return ', '', $target);
+		
 		if (empty($value)) {
 			$lines = $this->runScript($target);
 		} else {
@@ -1105,23 +1094,24 @@ COMP;
 	}
 	
 	/**
-	 * Added to support command from Selenium IDE 3.
+	 * Added to support command 'assert' from Selenium IDE 3.
 	 * 
 	 * @param type $target
 	 * @param string $value
 	 * @return type
 	 */
 	public function assert($target, $value) {
-		$localTarget = $this->replaceStoredValues($target, $this->_obj);
-		$localValue = $this->replaceStoredValues($value, $this->_obj);
+		$target = '${' . $target . '}';
+		$localTarget = $this->replaceStoredValues($target, true, $this->_obj);
+		$localValue = $this->replaceStoredValues($value, true, $this->_obj);
 		
 		$lines = array();
-		$lines[] = "\$this->log(\"Assert {$localTarget} = {$localValue}\");";
+		$lines[] = "\$this->log(\"Assert \" . {$localTarget} . \" = \" . {$localValue});";
 		if (strpos($value, '*')) {
 			$localValue = '/' . str_replace('*', '.+', $localValue) . '/';
-			$lines[] = "{$this->_obj}->assertRegExp($localValue, \${{$localTarget}});";
+			$lines[] = "{$this->_obj}->assertRegExp({$localValue}, \${$localTarget});";
 		} else {
-			$lines[] = "{$this->_obj}->assertEquals($localValue, \${{$localTarget}});";
+			$lines[] = "{$this->_obj}->assertEquals({$localValue}, {$localTarget});";
 		}
 		return $lines;
 	}
@@ -1248,7 +1238,7 @@ COMP;
 	 * @param string $value
 	 * @return type
 	 */
-	public function echo($value) {
+	public function printEcho($value) {
 		$localValue = $this->replaceStoredValues($value);
 
 		$lines = array();
@@ -1256,12 +1246,15 @@ COMP;
 		return $lines;
 	}
 	
-	protected function replaceStoredValues($value, $_obj = '$this') {
-		// For non-numeric values: Escape
-		if (!is_numeric($value)) {
-			$value = '"' . $value . '"';
-		}
-		
+	/**
+	 * Convert strings that might have paramaters introduced.
+	 * 
+	 * @param string $value
+	 * @param boolean $escape
+	 * @param string $_obj
+	 * @return string
+	 */
+	protected function replaceStoredValues($value, $escape = true, $_obj = '$this') {
 		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
 		$replaceTemplate = '" . ' . $_obj . '->getStoredValue("[value]") . "';
 		$matches = array();
@@ -1274,6 +1267,11 @@ COMP;
 				$replace[] = str_replace(['[value]', '${', '}'], [$match, '', ''], $replaceTemplate);
 			}
 		}
-		return str_replace($search, $replace, $value);
+		$return = str_replace($search, $replace, $value);
+		// For non-numeric values: Escape
+		if ($escape && !is_numeric($value)) {
+			$return = '"' . $return . '"';
+		}
+		return $return;
 	}
 }

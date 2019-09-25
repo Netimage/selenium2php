@@ -1234,7 +1234,7 @@ COMP;
 		}
 		
 		$re = '/(\\${[a-zA-Z0-9_]*\\})/';
-		$replaceTemplate = '" . $testCase->getStoredValue("[value]") . "';
+		$replaceTemplate = '" . $this->getStoredValue("[value]") . "';
 		preg_match_all($re, $value, $matches);
 		if (count($matches) > 0) {
 			$search = $replace = [];

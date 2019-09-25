@@ -380,7 +380,9 @@ class SeleniumIDE3Converter {
 				'browserstack.key'	 => BROWSERSTACK_KEY,
 				'os'				 => '{os}',
 				'os_version'		 => '{osVersion}',
-				'resolution'		 => '{resolution}'
+				'resolution'		 => '{resolution}',
+				'locationContextEnabled' => 'false',
+				'browserstack.geoLocation' => 'DK'
 			)
 		)";
 		$browserArr = array();

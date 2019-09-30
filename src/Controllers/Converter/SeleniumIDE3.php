@@ -594,7 +594,6 @@ class SeleniumIDE3Converter {
 		// Key value pairs
 		$vars = explode('$', $this->overrideSeleniumParams);
 		if (!empty($this->overrideSeleniumParams) && is_array($vars) && count($vars) > 0) {
-			var_dump($vars);
 			foreach ($vars as $var) {
 				list($key, $value) = explode(',', $var);
 				$commands->overrideSeleniumParams[$key] = $value;

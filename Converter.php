@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace Selenium2php;
+namespace Combine\Controllers\Converter;
 
 use Exception;
 use SebastianBergmann\RecursionContext\Exception as Exception2;
@@ -27,7 +27,7 @@ use Zend_Config_Ini;
  * Converts HTML text of Selenium test case recorded from Selenium IDE into
  * PHP code for PHPUnit_Extensions_SeleniumTestCase as TestCase file.
  */
-class Converter {
+class Converter extends Base {
 
 	protected $_testName = '';
 	protected $_lastTestName = '';

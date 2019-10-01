@@ -27,7 +27,7 @@ use Zend_Config_Ini;
  * Converts HTML text of Selenium test case recorded from Selenium IDE into
  * PHP code for PHPUnit_Extensions_SeleniumTestCase as TestCase file.
  */
-class KatalonConverter {
+class KatalonConverter extends Base {
 
 	protected $_testName = '';
 	protected $_lastTestName = '';

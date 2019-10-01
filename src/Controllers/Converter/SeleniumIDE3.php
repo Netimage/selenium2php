@@ -249,7 +249,7 @@ class SeleniumIDE3Converter {
 	 * @param string $suitePath
 	 * @return string
 	 */
-	public function convertJSON(string $jsonStr, string $testName = '', string $tplFile = '', string $suitePath = '') {
+	public function convert(string $jsonStr, string $testName = '', string $tplFile = '', string $suitePath = '') {
 		$commandLines = $this->_parse($jsonStr, $suitePath);
 
 		// $testStringContent = implode("\n\n", $testContent);

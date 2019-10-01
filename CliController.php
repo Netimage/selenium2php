@@ -19,8 +19,8 @@ namespace Selenium2php;
 /**
  * Handles CLI commands.
  */
-class CliController {
-    
+class Selenium2 extends Base {
+
 	/**
 	 *
 	 * @var Converter

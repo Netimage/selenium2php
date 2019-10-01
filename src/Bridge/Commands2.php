@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace Selenium2php;
+namespace Combine\Bridge;
 
 /**
  * Provides formatting some special commands into

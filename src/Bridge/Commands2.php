@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace Selenium2php;
+namespace Combine\Bridge;
 
 /**
  * Provides formatting some special commands into
@@ -78,7 +78,7 @@ class Commands2 {
 	}
 
 	public function type($selector, $value) {
-		$localValue = $this->replaceStoredValues($value);
+		$localValue = $this->replaceStoredValues($value, false);
 		
 		$lines = array();
 		$lines[] = "\$this->log(\"Typing $selector : $localValue\");";
@@ -232,40 +232,47 @@ class Commands2 {
 
 	public function click($selector) {
 		// Ensure element is in view before click.
-		$script = "document.getElementById('{$selector}').scrollIntoView();";
 		if (preg_match('/^\/\/(.+)/', $selector)) {
-			$script = "var node = document.evaluate(\"{$selector}\", document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ).singleNodeValue; node.scrollIntoView();";
+			$localSelector = $this->replaceStoredValues($selector);
+			$script = 'document.evaluate(\"' . $localSelector . '\", document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ).snapshotItem(0).scrollIntoView();';
 		} else if (preg_match('/^([a-z]+)=(.+)/', $selector, $match)) {
 			/* "id=login_name" */
 			switch ($match[1]) {
 				case 'id':
-					$script = "document.getElementById('{$match[2]}').scrollIntoView()";
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.getElementById(\"' . $localSelector . '\").scrollIntoView()';
 					break;
 				case 'name':
-					$script = "document.getElementByName('{$match[2]}').scrollIntoView()";
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.getElementByName(\"' . $localSelector . '\").scrollIntoView()';
 					break;
 				case 'link':
 				case 'xpath':
 					if ($match[1] == 'link') {
 						// Converting to a XPath structure.
-						$match[2] = "//a[contains(text(), \"{$match[2]}\")]";						
+						$match[2] = '//a[contains(text(), \"' . $match[2] . '\")]';						
 					} else {
 						// Remove trailing slash
 						$match[2] = rtrim($match[2], '/');						
 					}
-					$script = "var node = document.evaluate(\"{$match[2]}\", document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ).singleNodeValue; node.scrollIntoView()";
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.evaluate(\"' . $localSelector . '\", document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ).snapshotItem(0).scrollIntoView()';
 					break;
 				case 'css':
 					$match[2] = str_replace('..', '.', $match[2]);
-					$script = "document. querySelectorAll (\"{$match[2]}\")";
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.querySelectorAll (\"' . $localSelector . '\")';
 					break;
 				default:
+					$localSelector = $this->replaceStoredValues($selector, false);
+					$script = 'document.getElementById(\"' . $localSelector . '\").scrollIntoView();';
 					break;
 			}
 		}
 		$lines = $this->runScript($script);
+		$localSelector = $this->replaceStoredValues($selector, false);
 		
-		$lines[] = "\$this->log(\"Click on  $selector\");";
+		$lines[] = "\$this->log(\"Click on '{$selector}'\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->click();';
 		return $lines;

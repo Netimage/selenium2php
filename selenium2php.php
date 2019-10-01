@@ -21,8 +21,14 @@ set_include_path(implode(PATH_SEPARATOR, array(
         )));
 
 require 'libs/arguments.php';
-require 'CliController.php';
+require 'src/Bridge/Commands2.php';
+require 'src/Controllers/Cli/Base.php';
+require 'src/Controllers/Cli/Selenium2.php';
+require 'src/Controllers/Converter/Base.php';
+require 'src/Controllers/Converter/Selenium2.php';
+
+use Combine\Controllers\Cli\Selenium2;
 
 $cmd = arguments($argv);
-$controller = new Selenium2php\CliController();
+$controller = new Selenium2;
 $controller->run($cmd['arguments'], $cmd['options'], $cmd['flags']);

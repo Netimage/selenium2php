@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace Selenium2php;
+namespace Combine\Controllers\Cli;
+
+use Combine\Controllers\Converter\Selenium2 as Selenium2Converter;
 
 /**
  * Handles CLI commands.
@@ -50,8 +52,7 @@ class Selenium2 extends Base {
 	protected $_projectName = null;
 
 	public function __construct() {
-        require_once 'Converter.php';
-        $this->_converter = new Converter;
+        $this->_converter = new Selenium2Converter();
     }
     
     protected function _printTitle() {

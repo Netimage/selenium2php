@@ -22,6 +22,7 @@ use Exception;
 use SebastianBergmann\RecursionContext\Exception as Exception2;
 use SimpleXMLElement;
 use Zend_Config_Ini;
+use Combine\Bridge\Commands2;
 
 /**
  * Converts HTML text of Selenium test case recorded from Selenium IDE into
@@ -570,13 +571,7 @@ class KatalonConverter extends Base {
 	 * @return array
 	 */
 	protected function _composeTestMethodContent() {
-		if ($this->_selenium2) {
-			require_once __DIR__ . '/../../../Commands2.php';
-			$commands = new \Selenium2php\Commands2;
-		} else {
-			require_once __DIR__ . '/../../../Commands.php';
-			$commands = new \Selenium2php\Commands;
-		}
+        $commands = new Commands2;
 		$commands->screenshotsOnEveryStep = $this->screenshotsOnEveryStep;
 
 		// Key value pairs

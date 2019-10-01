@@ -56,8 +56,7 @@ class Katalon extends Base
 
     public function __construct()
     {
-        require_once __DIR__ . '/../Converter/Katalon.php';
-        $this->_converter = new \Combine\Controllers\Converter\KatalonConverter();
+        $this->_converter = new KatalonConverter();
     }
 
     protected function _printTitle()

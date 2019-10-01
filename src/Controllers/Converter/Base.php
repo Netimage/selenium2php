@@ -215,6 +215,37 @@ class Base
     }
 
     /**
+<<<<<<< HEAD
+=======
+     * Converts the JSON string to a set of test cases
+     * @param string $jsonStr
+     * @param string $testName
+     * @param string $tplFile
+     * @param string $suitePath
+     * @return string
+     */
+    public function convertJSON(string $jsonStr, string $testName = '', string $tplFile = '', string $suitePath = '')
+    {
+        $commandLines = $this->_parse($jsonStr, $suitePath);
+
+        // $testStringContent = implode("\n\n", $testContent);
+        if ($tplFile) {
+            if (is_file($tplFile)) {
+                $this->_testName = $testName;
+                $content = $this->_convertToTpl($tplFile, $commandLines);
+            } else {
+                echo "Template file {$tplFile} is not accessible.";
+                exit;
+            }
+        } else {
+            $content = $this->_composeStr($this->_composeLines($commandLines, false));
+        }
+
+        return $content;
+    }
+
+    /**
+>>>>>>> 21b95b1a4189dea9d0da11fcfb200a53d9532a36
      * Implodes lines of file into one string
      *
      * @param array $lines

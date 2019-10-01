@@ -78,11 +78,13 @@ class Commands2 {
 	}
 
 	public function type($selector, $value) {
+		$localValue = $this->replaceStoredValues($value, false);
+		
 		$lines = array();
-		$lines[] = "\$this->log(\"Typing $selector : $value\");";
+		$lines[] = "\$this->log(\"Typing $selector : $localValue\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->clear();';
-		$lines[] = '$input->value("' . $value . '");';
+		$lines[] = '$input->value("' . $localValue . '");';
 		return $lines;
 	}
 
@@ -97,10 +99,12 @@ class Commands2 {
 	 * @return string
 	 */
 	public function sendKeys($selector, $value) {
+		$localValue = $this->replaceStoredValues($value);
+		
 		$lines = array();
-		$lines[] = "\$this->log(\"Sending keys $selector : $value\");";
+		$lines[] = "\$this->log(\"Sending keys $selector : $localValue\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
-		$lines[] = '$input->value("' . $value . '");';
+		$lines[] = '$input->value("' . $localValue . '");';
 		return $lines;
 	}
 
@@ -227,16 +231,50 @@ class Commands2 {
 	}
 
 	public function click($selector) {
-		$lines = array();
-		$lines[] = "\$this->log(\"Click on  $selector\");";
+		// Ensure element is in view before click.
+		if (preg_match('/^\/\/(.+)/', $selector)) {
+			$localSelector = $this->replaceStoredValues($selector);
+			$script = 'document.evaluate(\"' . $localSelector . '\", document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ).snapshotItem(0).scrollIntoView();';
+		} else if (preg_match('/^([a-z]+)=(.+)/', $selector, $match)) {
+			/* "id=login_name" */
+			switch ($match[1]) {
+				case 'id':
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.getElementById(\"' . $localSelector . '\").scrollIntoView()';
+					break;
+				case 'name':
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.getElementByName(\"' . $localSelector . '\").scrollIntoView()';
+					break;
+				case 'link':
+				case 'xpath':
+					if ($match[1] == 'link') {
+						// Converting to a XPath structure.
+						$match[2] = '//a[contains(text(), \"' . $match[2] . '\")]';						
+					} else {
+						// Remove trailing slash
+						$match[2] = rtrim($match[2], '/');						
+					}
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.evaluate(\"' . $localSelector . '\", document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ).snapshotItem(0).scrollIntoView()';
+					break;
+				case 'css':
+					$match[2] = str_replace('..', '.', $match[2]);
+					$localSelector = $this->replaceStoredValues($match[2], false);
+					$script = 'document.querySelectorAll (\"' . $localSelector . '\")';
+					break;
+				default:
+					$localSelector = $this->replaceStoredValues($selector, false);
+					$script = 'document.getElementById(\"' . $localSelector . '\").scrollIntoView();';
+					break;
+			}
+		}
+		$lines = $this->runScript($script);
+		$localSelector = $this->replaceStoredValues($selector, false);
+		
+		$lines[] = "\$this->log(\"Click on '{$selector}'\");";
 		$lines[] = '$input = ' . $this->_byQuery($selector) . ';';
 		$lines[] = '$input->click();';
-//		
-//		// If we got a dialog; simply confirm it
-//		$lines[] = 'try {';
-//		$lines[] = '    ' . $this->_obj . '->acceptAlert();';
-//		$lines[] = '} catch (Exception $e) { // Do not care; the link may not produce a dialog';
-//		$lines[] = '}';
 		return $lines;
 	}
 

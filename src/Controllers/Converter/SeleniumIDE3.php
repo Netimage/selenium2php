@@ -76,4 +76,70 @@ class SeleniumIDE3Converter extends Base
         return $line;
     }
 
+
+	/**
+	 * Parses HTML from a suite file
+	 * @param string $jsonStr
+	 * @param string $suitePath
+	 */
+	protected function _parse(string $jsonStr, string $suitePath) {
+		$json = json_decode($jsonStr, true);
+
+		// Adding keys to the test cases
+		$tests = array();
+		foreach ($json['tests'] as $value) {
+			$key = $value['id'];
+			$tests[$key] = $value;
+		}
+		if (sizeof($tests) > 0) {
+			$json['tests'] = $tests;
+		}
+
+		$results = [];
+		foreach ($json['suites'] as $testSuite) {
+			if ($testSuite['name'] == $this->_suiteReference || $testSuite['id'] == $this->_suiteReference) {
+				$this->_testName = $this->_makeTestName($testSuite['name']);
+				foreach ($testSuite['tests'] as $testCaseReference) {
+					/* @var $testCaseReference string */
+					$jsonTestCase = $json['tests'][$testCaseReference];
+
+					$testMethodName = '';
+					$results[$testCaseReference]['commands'] = $this->_parseTestCase($jsonTestCase, $testMethodName);
+					$results[$testCaseReference]['name'] = $testMethodName;
+				}
+
+				break;
+			}
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Converts the JSON string to a set of test cases
+	 * @param string $jsonStr
+	 * @param string $testName
+	 * @param string $tplFile
+	 * @param string $suitePath
+	 * @return string
+	 */
+	public function convertJSON(string $jsonStr, string $testName = '', string $tplFile = '', string $suitePath = '') {
+		$commandLines = $this->_parse($jsonStr, $suitePath);
+
+		// $testStringContent = implode("\n\n", $testContent);
+		if ($tplFile) {
+			if (is_file($tplFile)) {
+				$this->_testName = $testName;
+				$content = $this->_convertToTpl($tplFile, $commandLines);
+			} else {
+				echo "Template file {$tplFile} is not accessible.";
+				exit;
+			}
+		} else {
+			$content = $this->_composeStr($this->_composeLines($commandLines, false));
+		}
+
+		return $content;
+	}
+
 }
